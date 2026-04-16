@@ -126,13 +126,16 @@ const handleOpenInvitation = () => {
   </div>
 
   <div v-else class="min-h-screen">
-    <HeroSection @open-invitation="handleOpenInvitation" />
+    <HeroSection
+      :is-opened="showContent"
+      @open-invitation="handleOpenInvitation"
+    />
 
     <div v-show="showContent" id="content">
       <CountdownTimer />
       <CoupleProfile />
       <Gallery ref="galleryRef" />
-      <EventDetails />
+      <EventDetails id="event-details" />
       <RSVPForm :guestbook-ref="guestbookRef" />
       <GiftSection />
       <Guestbook ref="guestbookRef" />

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { MessageSquare, Send, X, Heart, User } from "lucide-vue-next";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Autoplay } from "swiper/modules";
@@ -19,6 +19,8 @@ const isAutoPlayStarted = ref(false);
 
 const selectedWish = ref<Wish | null>(null);
 const isModalOpen = ref(false);
+const showSuccessPopup = ref(false);
+const successPopupData = ref({ name: "", message: "" });
 
 const canSubmit = computed(() => wishName.value && newWish.value);
 
@@ -65,6 +67,7 @@ const handleKeydown = (e: KeyboardEvent) => {
 
 const wishes = ref<Wish[]>([]);
 const isLoadingInitial = ref(true);
+let realtimeChannel: any = null;
 
 const fetchWishes = async () => {
   isLoadingInitial.value = true;
@@ -78,11 +81,7 @@ const fetchWishes = async () => {
       id: wish.id,
       name: wish.name,
       message: wish.message,
-      date: new Date(wish.created_at).toLocaleDateString("id-ID", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }),
+      created_at: wish.created_at,
     }));
   } else {
     console.error("Error fetching wishes:", error);
@@ -90,8 +89,41 @@ const fetchWishes = async () => {
   isLoadingInitial.value = false;
 };
 
+const subscribeToWishes = () => {
+  realtimeChannel = supabase
+    .channel("wishes-realtime")
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "wishes",
+      },
+      (payload: any) => {
+        const newWish = payload.new;
+        const exists = wishes.value.some((w) => w.id === newWish.id);
+        if (!exists) {
+          wishes.value.unshift({
+            id: newWish.id,
+            name: newWish.name,
+            message: newWish.message,
+            created_at: newWish.created_at,
+          });
+        }
+      },
+    )
+    .subscribe();
+};
+
 onMounted(() => {
   fetchWishes();
+  subscribeToWishes();
+});
+
+onUnmounted(() => {
+  if (realtimeChannel) {
+    supabase.removeChannel(realtimeChannel);
+  }
 });
 
 const newWish = ref("");
@@ -102,45 +134,59 @@ const addWish = async () => {
   if (wishName.value && newWish.value) {
     isSubmitting.value = true;
 
-    // Optimistic insert
-    const tempId = Date.now();
-    const newEntry = {
-      id: tempId,
-      name: wishName.value,
-      message: newWish.value,
-      date: new Date().toLocaleDateString("id-ID", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        second: "numeric",
-      }),
-    };
-
-    wishes.value.unshift(newEntry);
-
-    const { error } = await supabase.from("wishes").insert({
-      name: wishName.value,
-      message: newWish.value,
-    });
+    const { data, error } = await supabase
+      .from("wishes")
+      .insert({
+        name: wishName.value,
+        message: newWish.value,
+      })
+      .select()
+      .single();
 
     isSubmitting.value = false;
 
     if (error) {
       console.error("Error submitting wish:", error);
-      wishes.value = wishes.value.filter((w) => w.id !== tempId);
       alert("Gagal mengirim ucapan. Silakan coba lagi.");
       return;
     }
 
+    if (data) {
+      const newEntry = {
+        id: data.id,
+        name: data.name,
+        message: data.message,
+        created_at: data.created_at,
+      };
+
+      const exists = wishes.value.some((w) => w.id === newEntry.id);
+      if (!exists) {
+        wishes.value.unshift(newEntry);
+      }
+
+      successPopupData.value = {
+        name: data.name,
+        message: data.message,
+      };
+      showSuccessPopup.value = true;
+    }
+
     newWish.value = "";
     wishName.value = "";
-    emit("wishAdded", newEntry.name, newEntry.message);
+    emit(
+      "wishAdded",
+      data?.name || wishName.value,
+      data?.message || newWish.value,
+    );
   }
 };
 
 const showSwiper = computed(() => wishes.value.length > 0);
+
+const closeSuccessPopup = () => {
+  showSuccessPopup.value = false;
+  successPopupData.value = { name: "", message: "" };
+};
 </script>
 
 <style scoped>
@@ -259,7 +305,7 @@ const showSwiper = computed(() => wishes.value.length > 0);
                     {{ wish.name }}
                   </h4>
                   <FormatDate
-                    :date="wish.date"
+                    :date="wish.created_at"
                     :with-day="true"
                     class="text-muted flex-shrink-0 text-xs"
                   />
@@ -294,7 +340,7 @@ const showSwiper = computed(() => wishes.value.length > 0);
                   {{ wish.name }}
                 </h4>
                 <FormatDate
-                  :date="wish.date"
+                  :date="wish.created_at"
                   :with-day="true"
                   class="text-muted flex-shrink-0 text-xs"
                 />
@@ -331,7 +377,7 @@ const showSwiper = computed(() => wishes.value.length > 0);
                   {{ selectedWish?.name }}
                 </h3>
                 <FormatDate
-                  :date="String(selectedWish?.date)"
+                  :date="String(selectedWish?.created_at)"
                   :with-day="true"
                   class="text-muted flex-shrink-0 text-xs"
                 />
@@ -340,6 +386,41 @@ const showSwiper = computed(() => wishes.value.length > 0);
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+      </Teleport>
+
+      <Teleport to="body">
+        <div
+          v-if="showSuccessPopup"
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          @click.self="closeSuccessPopup"
+        >
+          <div
+            class="card relative w-full max-w-lg rounded-2xl bg-white p-6 text-center"
+          >
+            <div
+              class="bg-primary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
+            >
+              <Heart class="h-8 w-8 fill-white text-white" />
+            </div>
+            <h3 class="font-heading text-primary mb-2 text-xl">
+              Terima Kasih!
+            </h3>
+            <p class="text-primary-light mb-4">
+              Ucapan dan Doa Anda telah kami terima.
+            </p>
+            <div
+              class="bg-muted-light text-accent mb-4 rounded-lg p-3 text-center font-medium"
+            >
+              "{{ successPopupData.name }}"
+            </div>
+            <p class="text-primary line-clamp-3 text-sm">
+              "{{ successPopupData.message }}"
+            </p>
+            <p class="text-muted mt-4 text-sm">
+              Klik di mana saja untuk menutup
+            </p>
           </div>
         </div>
       </Teleport>

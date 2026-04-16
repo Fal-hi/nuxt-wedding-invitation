@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { Heart } from "lucide-vue-next";
 
+const props = defineProps<{
+  isOpened?: boolean;
+}>();
+
 const emit = defineEmits<{
   openInvitation: [];
 }>();
@@ -10,6 +14,16 @@ import type { WeddingInfo } from "~/types";
 import FormatDate from "~/utils/FormatDate.vue";
 
 const weddingInfo = useState<WeddingInfo>("weddingInfo");
+
+const scrollToEventDetails = async () => {
+  emit("openInvitation");
+  await nextTick();
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  const eventDetails = document.getElementById("event-details");
+  if (eventDetails) {
+    eventDetails.scrollIntoView({ behavior: "smooth" });
+  }
+};
 
 const scrollToContent = async () => {
   emit("openInvitation");
@@ -76,10 +90,10 @@ const scrollToContent = async () => {
       </p>
 
       <button
-        @click="scrollToContent"
+        @click="isOpened ? scrollToEventDetails() : scrollToContent()"
         class="btn-primary text-lg shadow-2xl hover:shadow-sky-400/50 md:text-xl"
       >
-        Buka Undangan
+        {{ isOpened ? "Lihat Acara" : "Buka Undangan" }}
       </button>
     </div>
 

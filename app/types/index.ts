@@ -55,7 +55,7 @@ export interface Wish {
   id: number;
   name: string;
   message: string;
-  date: string;
+  created_at: string;
 }
 
 export interface TimeLeft {

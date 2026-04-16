@@ -6,6 +6,10 @@ import type { WeddingInfo, Event } from "~/types";
 
 import { computed } from "vue";
 
+defineProps<{
+  id?: string;
+}>();
+
 const weddingInfo = useState<WeddingInfo>("weddingInfo");
 
 const akadNikah = computed<Event>(() => ({
@@ -34,11 +38,17 @@ const openMaps = (url: string) => {
 </script>
 
 <template>
-  <section class="section relative overflow-hidden">
+  <section :id="id" class="section relative overflow-hidden">
     <div class="absolute inset-0 opacity-30">
-      <div class="absolute left-10 top-10 h-32 w-32 rounded-full bg-white blur-3xl"></div>
-      <div class="absolute bottom-20 right-20 h-48 w-48 rounded-full bg-white blur-3xl"></div>
-      <div class="absolute left-1/4 top-1/2 h-24 w-24 rounded-full bg-white blur-2xl"></div>
+      <div
+        class="absolute left-10 top-10 h-32 w-32 rounded-full bg-white blur-3xl"
+      ></div>
+      <div
+        class="absolute bottom-20 right-20 h-48 w-48 rounded-full bg-white blur-3xl"
+      ></div>
+      <div
+        class="absolute left-1/4 top-1/2 h-24 w-24 rounded-full bg-white blur-2xl"
+      ></div>
     </div>
     <div class="container-custom relative z-10">
       <div class="mb-12 text-center" data-aos="fade-up">
