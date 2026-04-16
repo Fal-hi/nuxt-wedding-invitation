@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { Send, Check, X, User } from "lucide-vue-next";
+import type { WeddingInfo } from "~/types";
+import FormatDate from "~/utils/FormatDate.vue";
 
 const props = defineProps<{
   guestbookRef?: {
@@ -9,10 +11,14 @@ const props = defineProps<{
   } | null;
 }>();
 
+const supabase = useSupabase();
+
+const weddingInfo = useState<WeddingInfo>("weddingInfo");
 const name = ref("");
 const attendance = ref<"hadir" | "tidak" | "">("");
 const numGuests = ref(1);
 const isSubmitted = ref(false);
+const isLoading = ref(false);
 const showPopup = ref(false);
 const showConfirmNotComing = ref(false);
 const additionalGuestNames = ref<string[]>([]);
@@ -46,12 +52,37 @@ const updateAdditionalGuestName = (index: number, value: string) => {
   additionalGuestNames.value[index] = value;
 };
 
-const confirmNotComing = () => {
+const confirmNotComing = async () => {
   attendance.value = "tidak";
-  showConfirmNotComing.value = false;
   numGuests.value = 1;
   additionalGuestNames.value = [];
-  name.value = "";
+
+  isLoading.value = true;
+  const { error } = await supabase.from("rsvps").insert({
+    name: name.value,
+    attendance: "tidak",
+    num_guests: 1,
+    additional_guest_names: [],
+    reason: reason.value,
+  });
+  isLoading.value = false;
+
+  if (error) {
+    console.error("Error submitting RSVP:", error);
+    alert("Terjadi kesalahan saat mengirim data. Silakan coba lagi.");
+    return;
+  }
+
+  showConfirmNotComing.value = false;
+  isSubmitted.value = true;
+  showPopup.value = true;
+
+  setTimeout(() => {
+    if (props.guestbookRef) {
+      props.guestbookRef.scrollToLatest();
+      props.guestbookRef.startAutoScroll();
+    }
+  }, 1500);
 };
 
 const handleNotComingClick = () => {
@@ -64,17 +95,31 @@ const cancelNotComing = () => {
   showConfirmNotComing.value = false;
 };
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
   if (canSubmit.value) {
     const guestNames = [
       name.value,
       ...additionalGuestNames.value.filter((n) => n.trim()),
     ];
-    console.log("RSVP Submitted:", {
-      names: guestNames,
+
+    isLoading.value = true;
+    const { error } = await supabase.from("rsvps").insert({
+      name: name.value,
       attendance: attendance.value,
-      totalGuests: guestNames.length,
+      num_guests: numGuests.value,
+      additional_guest_names: additionalGuestNames.value.filter((n) =>
+        n.trim(),
+      ),
+      reason: reason.value,
     });
+    isLoading.value = false;
+
+    if (error) {
+      console.error("Error submitting RSVP:", error);
+      alert("Terjadi kesalahan saat mengirim data. Silakan coba lagi.");
+      return;
+    }
+
     isSubmitted.value = true;
     showPopup.value = true;
     setTimeout(() => {
@@ -99,15 +144,27 @@ const resetForm = () => {
 </script>
 
 <template>
-  <section class="section bg-white">
-    <div class="container-custom">
+  <section class="section relative overflow-hidden">
+    <div class="absolute inset-0 opacity-30">
+      <div
+        class="absolute right-16 top-8 h-36 w-36 rounded-full bg-white blur-3xl"
+      ></div>
+      <div
+        class="absolute bottom-12 left-10 h-44 w-44 rounded-full bg-white blur-3xl"
+      ></div>
+      <div
+        class="absolute left-1/3 top-1/2 h-20 w-20 rounded-full bg-white blur-2xl"
+      ></div>
+    </div>
+    <div class="container-custom relative z-10">
       <div class="mb-12 text-center" data-aos="fade-up">
-        <h2 class="font-heading text-primary mb-2 text-2xl md:text-3xl">
+        <h2 class="font-heading text-accent mb-2 text-2xl md:text-3xl">
           Konfirmasi Kehadiran
         </h2>
         <div class="divider"></div>
-        <p class="text-text-muted mt-4">
-          Mohon konfirmasi kehadiran Anda sebelum tanggal 28 Juni 2026
+        <p class="text-primary-light mt-4 text-sm">
+          Mohon konfirmasi kehadiran Anda sebelum
+          <FormatDate :date="weddingInfo?.wedding_date" :with-day="true" />
         </p>
       </div>
 
@@ -139,7 +196,7 @@ const resetForm = () => {
               <button
                 type="button"
                 @click="canSelectAttendance && (attendance = 'hadir')"
-                class="border-text-muted flex items-center justify-center gap-2 rounded-xl border-2 px-4 py-3 transition-all duration-200"
+                class="border-primary flex items-center justify-center gap-2 rounded-xl border-2 px-4 py-3 transition-all duration-200"
                 :class="
                   attendance === 'hadir'
                     ? 'bg-primary text-white'
@@ -155,13 +212,13 @@ const resetForm = () => {
               <button
                 type="button"
                 @click="handleNotComingClick"
-                class="flex items-center justify-center gap-2 rounded-xl border-2 px-4 py-3 transition-all duration-200"
+                class="border-primary flex items-center justify-center gap-2 rounded-xl border-2 px-4 py-3 transition-all duration-200"
                 :class="
                   attendance === 'tidak'
-                    ? 'border-red-400 bg-red-50 text-red-700'
+                    ? 'border-primary text-white'
                     : canSelectAttendance
-                      ? 'border-text-muted text-primary hover:border-primary'
-                      : 'border-text-muted text-primary cursor-not-allowed opacity-50'
+                      ? 'border-primary text-primary hover:border-primary'
+                      : 'border-primary text-primary cursor-not-allowed opacity-50'
                 "
                 :disabled="!canSelectAttendance"
               >
@@ -210,11 +267,17 @@ const resetForm = () => {
           <button
             type="submit"
             class="btn-primary flex w-full items-center justify-center gap-2"
-            :class="{ 'cursor-not-allowed opacity-50': !canSubmit }"
-            :disabled="!canSubmit"
+            :class="{
+              'cursor-not-allowed opacity-50': !canSubmit || isLoading,
+            }"
+            :disabled="!canSubmit || isLoading"
           >
-            <Send class="h-5 w-5" />
-            Kirim Konfirmasi
+            <Send v-if="!isLoading" class="h-5 w-5" />
+            <span
+              v-if="isLoading"
+              class="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"
+            ></span>
+            {{ isLoading ? "Sedang Mengirim..." : "Kirim Konfirmasi" }}
           </button>
         </form>
       </div>
@@ -246,13 +309,11 @@ const resetForm = () => {
           class="card relative w-full max-w-lg rounded-2xl bg-white p-6 text-center"
         >
           <div
-            class="bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
+            class="bg-primary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
           >
             <Check class="h-8 w-8 text-white" />
           </div>
-          <h3 class="font-heading text-secondary mb-2 text-xl">
-            Terima Kasih!
-          </h3>
+          <h3 class="font-heading text-primary mb-2 text-xl">Terima Kasih!</h3>
           <p class="text-primary-light mb-4">
             Ucapan dan Doa Anda telah kami terima.
           </p>
@@ -276,9 +337,9 @@ const resetForm = () => {
           class="card relative w-full max-w-lg rounded-2xl bg-white p-6 text-center"
         >
           <div
-            class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100"
+            class="bg-primary-light mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
           >
-            <X class="h-8 w-8 text-red-600" />
+            <X class="h-8 w-8 text-white" />
           </div>
           <h3 class="font-heading text-accent mb-2 text-xl">Konfirmasi</h3>
           <p class="text-primary-light mb-4">
@@ -291,11 +352,25 @@ const resetForm = () => {
             placeholder="Masukkan alasan Anda"
           ></textarea>
           <div class="flex gap-4">
-            <button @click="cancelNotComing" class="btn-secondary flex-1">
+            <button
+              type="button"
+              @click="cancelNotComing"
+              class="btn-secondary flex-1"
+              :disabled="isLoading"
+            >
               Batal
             </button>
-            <button @click="confirmNotComing" class="btn-primary flex-1">
-              Ya, Saya Tidak Hadir
+            <button
+              type="button"
+              @click="confirmNotComing"
+              class="btn-primary flex flex-1 items-center justify-center gap-2"
+              :disabled="isLoading"
+            >
+              <span
+                v-if="isLoading"
+                class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+              ></span>
+              {{ isLoading ? "Menyimpan..." : "Ya, Saya Tidak Hadir" }}
             </button>
           </div>
         </div>

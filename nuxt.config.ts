@@ -25,4 +25,10 @@ export default defineNuxtConfig({
   nitro: {
     preset: "vercel",
   },
+  runtimeConfig: {
+    public: {
+      supabaseUrl: process.env.SUPABASE_URL,
+      supabaseKey: process.env.SUPABASE_KEY,
+    },
+  },
 });

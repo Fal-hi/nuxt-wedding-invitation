@@ -6,7 +6,10 @@ const emit = defineEmits<{
 }>();
 
 import { nextTick } from "vue";
+import type { WeddingInfo } from "~/types";
 import FormatDate from "~/utils/FormatDate.vue";
+
+const weddingInfo = useState<WeddingInfo>("weddingInfo");
 
 const scrollToContent = async () => {
   emit("openInvitation");
@@ -23,7 +26,7 @@ const scrollToContent = async () => {
   <section
     class="relative flex min-h-screen items-center justify-center overflow-hidden"
   >
-    <div class="bg-sky-gradient absolute inset-0"></div>
+    <div class="bg-sky-gradient absolute"></div>
 
     <div class="absolute inset-0 opacity-30">
       <div
@@ -56,20 +59,20 @@ const scrollToContent = async () => {
 
       <div class="mb-4">
         <h1
-          class="font-heading mr-40 text-4xl font-semibold text-white md:text-6xl lg:text-7xl"
+          class="font-heading mr-32 text-6xl font-semibold text-white md:mr-40 md:text-6xl lg:text-7xl"
         >
-          RINA
+          {{ weddingInfo?.bride_nickname }}
         </h1>
-        <span class="text-2xl font-light text-white md:text-6xl">&amp;</span>
+        <span class="text-5xl font-light text-white md:text-6xl">&amp;</span>
         <h1
-          class="font-heading ml-40 text-4xl font-semibold text-white md:text-6xl lg:text-7xl"
+          class="font-heading ml-32 text-6xl font-semibold text-white md:ml-40 md:text-6xl lg:text-7xl"
         >
-          BUDI
+          {{ weddingInfo?.groom_nickname }}
         </h1>
       </div>
 
       <p class="mb-12 text-sm text-white/80 md:text-base">
-        <FormatDate date="2026-06-28" :with-day="true" />
+        <FormatDate :date="weddingInfo?.wedding_date" :with-day="true" />
       </p>
 
       <button

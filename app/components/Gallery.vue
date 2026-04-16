@@ -4,64 +4,23 @@ import { Swiper, SwiperSlide } from "swiper/vue";
 import { Autoplay } from "swiper/modules";
 import "swiper/css";
 import type { Swiper as SwiperType } from "swiper/types";
+import type { GalleryImage, Image } from "~/types";
 
-interface GalleryImage {
-  src: string;
-  alt: string;
-}
+import { computed } from "vue";
 
 const modules = [Autoplay];
 
-const galleryImages: GalleryImage[] = [
-  {
-    src: "https://images.unsplash.com/photo-1519741497674-611481863552?w=400&h=600&fit=crop",
-    alt: "Pre-wedding 1",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=400&h=600&fit=crop",
-    alt: "Pre-wedding 2",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1522673607200-1645062cd958?w=400&h=600&fit=crop",
-    alt: "Pre-wedding 3",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=400&h=600&fit=crop",
-    alt: "Pre-wedding 4",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1529636798458-92182e662485?w=400&h=600&fit=crop",
-    alt: "Pre-wedding 5",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1591604466107-ec97de577aff?w=400&h=600&fit=crop",
-    alt: "Pre-wedding 6",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=400&h=600&fit=crop",
-    alt: "Pre-wedding 7",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1522673607200-1645062cd958?w=400&h=600&fit=crop",
-    alt: "Pre-wedding 8",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1519741497674-611481863552?w=400&h=600&fit=crop",
-    alt: "Pre-wedding 9",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=400&h=600&fit=crop",
-    alt: "Pre-wedding 10",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1522673607200-1645062cd958?w=400&h=600&fit=crop",
-    alt: "Pre-wedding 11",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=400&h=600&fit=crop",
-    alt: "Pre-wedding 12",
-  },
-];
+const serverImages = useState<GalleryImage[]>("galleryImages");
+
+const galleryImages = computed<Image[]>(() => {
+  if (serverImages.value && serverImages.value.length > 0) {
+    return serverImages.value.map((img: GalleryImage) => ({
+      src: img.image_url,
+      alt: img.alt_text || "Gallery Image",
+    }));
+  }
+  return [];
+});
 
 const isOpen = ref(false);
 const currentImage = ref("");
@@ -71,7 +30,7 @@ const isAutoPlayStarted = ref(false);
 
 const openLightbox = (index: number) => {
   currentIndex.value = index;
-  currentImage.value = galleryImages[index]?.src || "";
+  currentImage.value = galleryImages.value[index]?.src || "";
   isOpen.value = true;
   document.body.style.overflow = "hidden";
   window.addEventListener("keydown", handleKeydown);
@@ -96,17 +55,17 @@ const handleKeydown = (e: KeyboardEvent) => {
 const prevImage = () => {
   currentIndex.value =
     currentIndex.value === 0
-      ? galleryImages.length - 1
+      ? galleryImages.value.length - 1
       : currentIndex.value - 1;
-  currentImage.value = galleryImages[currentIndex.value]?.src || "";
+  currentImage.value = galleryImages.value[currentIndex.value]?.src || "";
 };
 
 const nextImage = () => {
   currentIndex.value =
-    currentIndex.value === galleryImages.length - 1
+    currentIndex.value === galleryImages.value.length - 1
       ? 0
       : currentIndex.value + 1;
-  currentImage.value = galleryImages[currentIndex.value]?.src || "";
+  currentImage.value = galleryImages.value[currentIndex.value]?.src || "";
 };
 
 const onSwiper = (swiper: SwiperType) => {
@@ -139,8 +98,13 @@ defineExpose({ startAutoScroll });
 </style>
 
 <template>
-  <section class="section bg-background">
-    <div class="container-custom">
+  <section class="section relative overflow-hidden">
+    <div class="absolute inset-0 opacity-30">
+      <div class="absolute left-20 top-12 h-40 w-40 rounded-full bg-white blur-3xl"></div>
+      <div class="absolute bottom-16 right-10 h-32 w-32 rounded-full bg-white blur-3xl"></div>
+      <div class="absolute left-1/2 top-1/3 h-24 w-24 rounded-full bg-white blur-2xl"></div>
+    </div>
+    <div class="container-custom relative z-10">
       <div class="mb-12 text-center" data-aos="fade-up">
         <h2 class="font-heading text-accent mb-2 text-2xl md:text-3xl">
           Gallery

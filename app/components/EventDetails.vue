@@ -1,34 +1,32 @@
 <script setup lang="ts">
 import { MapPin, Clock, Calendar } from "lucide-vue-next";
+import FormatDate from "~/utils/FormatDate.vue";
 
-interface Event {
-  title: string;
-  date: string;
-  time: string;
-  location: string;
-  address: string;
-  mapsUrl: string;
-}
+import type { WeddingInfo, Event } from "~/types";
 
-const akadNikah: Event = {
+import { computed } from "vue";
+
+const weddingInfo = useState<WeddingInfo>("weddingInfo");
+
+const akadNikah = computed<Event>(() => ({
   title: "Akad Nikah",
-  date: "Minggu, 15 Juni 2025",
-  time: "10:00 - 12:00 WIB",
-  location: "Masjid Al-Hidayah",
-  address: "Jl. Masjid No. 45, Jakarta Selatan",
-  mapsUrl: "https://maps.google.com/?q=Masjid+Al-Hidayah+Jakarta",
-};
+  date: weddingInfo.value?.wedding_date || "-",
+  time: weddingInfo.value?.akad_time || "-",
+  location: weddingInfo.value?.akad_location || "-",
+  address: weddingInfo.value?.akad_address || "-",
+  mapsUrl: weddingInfo.value?.akad_maps_url || "-",
+}));
 
-const resepsi: Event = {
+const resepsi = computed<Event>(() => ({
   title: "Resepsi",
-  date: "Minggu, 15 Juni 2025",
-  time: "12:00 - 16:00 WIB",
-  location: "Gedung Serba Guna",
-  address: "Jl. Raya Bogor Km. 25, Jakarta Timur",
-  mapsUrl: "https://maps.google.com/?q=Gedung+Serba+Guna+Jakarta+Timur",
-};
+  date: weddingInfo.value?.wedding_date || "-",
+  time: weddingInfo.value?.resepsi_time || "-",
+  location: weddingInfo.value?.resepsi_location || "-",
+  address: weddingInfo.value?.resepsi_address || "-",
+  mapsUrl: weddingInfo.value?.resepsi_maps_url || "-",
+}));
 
-const events = [akadNikah, resepsi];
+const events = computed(() => [akadNikah.value, resepsi.value]);
 
 const openMaps = (url: string) => {
   window.open(url, "_blank");
@@ -36,13 +34,21 @@ const openMaps = (url: string) => {
 </script>
 
 <template>
-  <section class="section bg-background">
-    <div class="container-custom">
+  <section class="section relative overflow-hidden">
+    <div class="absolute inset-0 opacity-30">
+      <div class="absolute left-10 top-10 h-32 w-32 rounded-full bg-white blur-3xl"></div>
+      <div class="absolute bottom-20 right-20 h-48 w-48 rounded-full bg-white blur-3xl"></div>
+      <div class="absolute left-1/4 top-1/2 h-24 w-24 rounded-full bg-white blur-2xl"></div>
+    </div>
+    <div class="container-custom relative z-10">
       <div class="mb-12 text-center" data-aos="fade-up">
         <h2 class="font-heading text-accent mb-2 text-2xl md:text-3xl">
           Waktu &amp; Tempat
         </h2>
         <div class="divider"></div>
+        <p class="text-primary-light mt-4 text-sm">
+          Berikut adalah jadwal &amp; tempat acara pernikahan kami
+        </p>
       </div>
 
       <div class="grid gap-8 md:grid-cols-2">
@@ -64,7 +70,11 @@ const openMaps = (url: string) => {
               <Calendar class="text-muted mt-0.5 h-5 w-5 flex-shrink-0" />
               <div>
                 <p class="text-muted text-sm font-medium">Tanggal</p>
-                <p class="text-accent">{{ event.date }}</p>
+                <FormatDate
+                  :date="event.date"
+                  :with-day="true"
+                  class="text-accent"
+                />
               </div>
             </div>
 

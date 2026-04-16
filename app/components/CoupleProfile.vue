@@ -1,30 +1,39 @@
 <script setup lang="ts">
 import { Heart } from "lucide-vue-next";
+import { computed } from "vue";
+import type { CoupleMember, WeddingInfo } from "~/types";
 
-interface CoupleMember {
-  name: string;
-  parents: string;
-  photo?: string;
-}
+const weddingInfo = useState<WeddingInfo>("weddingInfo");
 
-const bride: CoupleMember = {
-  name: "Rina Susilowati",
-  parents: "Putri dari Bpk. H. Suharto & Ibu Hj. Siti Aminah",
-  photo:
-    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop&crop=face",
-};
+const bride = computed<CoupleMember>(() => ({
+  name: weddingInfo.value?.bride_name || "-",
+  photo: weddingInfo.value?.bride_photo || "-",
+  bride_mother: weddingInfo.value?.bride_mother || "-",
+  bride_father: weddingInfo.value?.bride_father || "-",
+}));
 
-const groom: CoupleMember = {
-  name: "Budi Santoso",
-  parents: "Putra dari Bpk. H. Marzuki & Ibu Hj. Hartati",
-  photo:
-    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
-};
+const groom = computed<CoupleMember>(() => ({
+  name: weddingInfo.value?.groom_name || "-",
+  photo: weddingInfo.value?.groom_photo || "-",
+  groom_mother: weddingInfo.value?.groom_mother || "-",
+  groom_father: weddingInfo.value?.groom_father || "-",
+}));
 </script>
 
 <template>
-  <section class="section bg-surface">
-    <div class="container-custom">
+  <section class="section relative overflow-hidden">
+    <div class="absolute inset-0 opacity-30">
+      <div
+        class="absolute right-10 top-16 h-36 w-36 rounded-full bg-white blur-3xl"
+      ></div>
+      <div
+        class="absolute bottom-10 left-20 h-40 w-40 rounded-full bg-white blur-3xl"
+      ></div>
+      <div
+        class="absolute right-1/3 top-1/2 h-28 w-28 rounded-full bg-white blur-2xl"
+      ></div>
+    </div>
+    <div class="container-custom relative z-10">
       <div class="mb-12 text-center" data-aos="fade-up">
         <h2 class="font-heading text-accent mb-2 text-2xl md:text-3xl">
           Mempelai
@@ -51,7 +60,8 @@ const groom: CoupleMember = {
           <p
             class="text-primary-light mx-auto max-w-[250px] text-sm leading-relaxed"
           >
-            {{ bride.parents }}
+            Putri dari Bpk. {{ bride.bride_father }} & Ibu
+            {{ bride.bride_mother }}
           </p>
         </div>
 
@@ -75,7 +85,8 @@ const groom: CoupleMember = {
           <p
             class="text-primary-light mx-auto max-w-[250px] text-sm leading-relaxed"
           >
-            {{ groom.parents }}
+            Putra dari Bpk. {{ groom.groom_father }} & Ibu
+            {{ groom.groom_mother }}
           </p>
         </div>
       </div>
