@@ -1,5 +1,14 @@
+<script setup lang="ts">
+const config = useRuntimeConfig();
+const cloudUrl = `${config.public.supabaseUrl}/storage/v1/object/public/image/cloud.png`;
+</script>
+
 <template>
-  <div class="cloud-parallax-container" aria-hidden="true">
+  <div
+    class="cloud-parallax-container"
+    aria-hidden="true"
+    :style="{ '--cloud-url': `url(${cloudUrl})` }"
+  >
     <!-- Left side clouds -->
     <div class="cloud cloud-left cloud-1"></div>
     <div class="cloud cloud-left cloud-2"></div>
@@ -28,7 +37,7 @@
 
 .cloud {
   position: absolute;
-  background-image: url("https://wegjggivvlybwrbjnpcy.supabase.co/storage/v1/object/public/image/cloud.png");
+  background-image: var(--cloud-url);
   background-size: contain;
   background-repeat: no-repeat;
   opacity: 0.85;

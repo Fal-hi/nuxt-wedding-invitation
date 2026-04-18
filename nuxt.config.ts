@@ -17,7 +17,7 @@ export default defineNuxtConfig({
       title: "Undangan Pernikahan - Biru Langit",
       meta: [
         { charset: "utf-8" },
-        { name: "viewport", content: "width=device-width, initial-scale=1" },
+        { name: "viewport", content: "width=device-width, initial-scale:1" },
         { name: "description", content: "Undangan Pernikahan - Biru Langit" },
       ],
     },
@@ -27,8 +27,8 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      supabaseUrl: process.env.SUPABASE_URL,
-      supabaseKey: process.env.SUPABASE_KEY,
+      supabaseUrl: process.env.SUPABASE_URL || "",
+      supabaseKey: process.env.SUPABASE_KEY || "",
     },
   },
 });

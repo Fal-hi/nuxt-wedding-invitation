@@ -245,7 +245,7 @@ const closeSuccessPopup = () => {
             ></textarea>
             <p v-if="!canSubmit" class="text-primary text-xs">
               <User class="mr-1 inline h-3 w-3" />
-              Mohon isi nama dan ucapan terlebih dahulu
+              Mohon isi nama dan ucapan/doa terlebih dahulu
             </p>
           </div>
           <button

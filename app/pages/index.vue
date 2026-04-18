@@ -12,10 +12,12 @@ import RSVPForm from "~/components/RSVPForm.vue";
 import GiftSection from "~/components/GiftSection.vue";
 import Guestbook from "~/components/Guestbook.vue";
 import CloudParallax from "~/components/CloudParallax.vue";
+import MusicPlayer from "~/components/MusicPlayer.vue";
 
 const showContent = ref(false);
 const galleryRef = ref<any>(null);
 const guestbookRef = ref<any>(null);
+const musicRef = ref<any>(null);
 
 const weddingInfo = useState<any>("weddingInfo", () => null);
 const galleryImages = useState<any[]>("galleryImages", () => []);
@@ -62,6 +64,9 @@ const handleOpenInvitation = () => {
     }
     if (guestbookRef.value) {
       guestbookRef.value.startAutoScroll();
+    }
+    if (musicRef.value) {
+      musicRef.value.startMusic();
     }
   }, 500);
 };
@@ -126,6 +131,8 @@ const handleOpenInvitation = () => {
   </div>
 
   <div v-else class="min-h-screen">
+    <MusicPlayer ref="musicRef" />
+
     <HeroSection
       :is-opened="showContent"
       @open-invitation="handleOpenInvitation"

@@ -97,11 +97,6 @@ const cancelNotComing = () => {
 
 const handleSubmit = async () => {
   if (canSubmit.value) {
-    const guestNames = [
-      name.value,
-      ...additionalGuestNames.value.filter((n) => n.trim()),
-    ];
-
     isLoading.value = true;
     const { error } = await supabase.from("rsvps").insert({
       name: name.value,
@@ -315,7 +310,8 @@ const resetForm = () => {
           </div>
           <h3 class="font-heading text-primary mb-2 text-xl">Terima Kasih!</h3>
           <p class="text-primary-light mb-4">
-            Ucapan dan Doa Anda telah kami terima.
+            Alasan ketidakhadiran Anda telah kami terima. Semoga Anda dan
+            keluarga sehat selalu.
           </p>
           <p
             class="bg-muted-light text-accent rounded-lg p-3 text-center font-medium"
@@ -348,10 +344,11 @@ const resetForm = () => {
           </p>
           <textarea
             v-model="reason"
-            class="input-field"
+            class="input-field min-h-32"
             placeholder="Masukkan alasan Anda"
+            autofocus
           ></textarea>
-          <div class="flex gap-4">
+          <div class="mt-4 flex gap-4">
             <button
               type="button"
               @click="cancelNotComing"
@@ -370,7 +367,7 @@ const resetForm = () => {
                 v-if="isLoading"
                 class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
               ></span>
-              {{ isLoading ? "Menyimpan..." : "Ya, Saya Tidak Hadir" }}
+              {{ isLoading ? "Menyimpan..." : "Kirim Konfirmasi" }}
             </button>
           </div>
         </div>
