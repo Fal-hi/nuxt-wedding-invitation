@@ -356,34 +356,36 @@ const closeSuccessPopup = () => {
       <Teleport to="body">
         <div
           v-if="isModalOpen"
-          class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 transition-all duration-300"
           @click.self="closeModal"
         >
-          <div class="card relative w-full max-w-lg rounded-2xl bg-white p-6">
+          <div class="card relative w-full max-w-lg rounded-3xl bg-white/95 p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-300 border border-white">
             <button
-              class="bg-muted-light text-muted hover:bg-muted absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:text-white"
+              class="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full text-gray-400 bg-gray-50 hover:bg-gray-100 hover:text-gray-600 transition-colors"
               @click="closeModal"
             >
               <X class="h-5 w-5" />
             </button>
-            <div class="flex items-start gap-4">
+            <div class="flex items-start gap-5">
               <div
-                class="bg-muted-light flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full"
+                class="bg-gradient-to-br from-primary-light to-primary flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full shadow-md text-white"
               >
-                <MessageSquare class="text-muted h-7 w-7" />
+                <MessageSquare class="h-8 w-8" />
               </div>
-              <div class="flex-1">
-                <h3 class="text-accent font-heading mb-1 text-xl font-medium">
+              <div class="flex-1 pt-1">
+                <h3 class="text-primary-dark font-heading mb-1 text-2xl font-bold">
                   {{ selectedWish?.name }}
                 </h3>
                 <FormatDate
                   :date="String(selectedWish?.created_at)"
                   :with-day="true"
-                  class="text-muted flex-shrink-0 text-xs"
+                  class="text-gray-400 block mb-4 text-sm font-medium"
                 />
-                <p class="text-primary-light whitespace-pre-wrap">
-                  {{ selectedWish?.message }}
-                </p>
+                <div class="bg-sky-50/50 p-4 rounded-2xl border border-sky-100/50">
+                  <p class="text-gray-700 whitespace-pre-wrap leading-relaxed font-serif italic">
+                    "{{ selectedWish?.message }}"
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -393,34 +395,34 @@ const closeSuccessPopup = () => {
       <Teleport to="body">
         <div
           v-if="showSuccessPopup"
-          class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 transition-all duration-300"
           @click.self="closeSuccessPopup"
         >
           <div
-            class="card relative w-full max-w-lg rounded-2xl bg-white p-6 text-center"
+            class="card relative w-full max-w-lg rounded-3xl bg-white/95 p-8 text-center shadow-2xl animate-in fade-in zoom-in-95 duration-300 border border-white"
           >
             <div
-              class="bg-primary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
+              class="bg-gradient-to-br from-pink-400 to-rose-400 mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full shadow-lg"
             >
-              <Heart class="h-8 w-8 fill-white text-white" />
+              <Heart class="h-10 w-10 fill-white text-white" />
             </div>
-            <h3 class="font-heading text-primary mb-2 text-xl">
+            <h3 class="font-heading text-primary-dark mb-3 text-2xl font-bold">
               Terima Kasih!
             </h3>
-            <p class="text-primary-light mb-4">
+            <p class="text-gray-600 mb-6 leading-relaxed">
               Ucapan dan Doa Anda telah kami terima.
             </p>
             <div
-              class="bg-muted-light text-accent mb-4 rounded-lg p-3 text-center font-medium"
+              class="bg-rose-50 border border-rose-100 text-rose-800 mb-6 rounded-2xl p-5 text-center shadow-sm"
             >
-              "{{ successPopupData.name }}"
+              <p class="font-medium mb-2">{{ successPopupData.name }}</p>
+              <p class="line-clamp-3 text-sm italic font-serif opacity-80">
+                "{{ successPopupData.message }}"
+              </p>
             </div>
-            <p class="text-primary line-clamp-3 text-sm">
-              "{{ successPopupData.message }}"
-            </p>
-            <p class="text-muted mt-4 text-sm">
-              Klik di mana saja untuk menutup
-            </p>
+            <button @click="closeSuccessPopup" class="absolute right-4 top-4 rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
+              <X class="h-5 w-5" />
+            </button>
           </div>
         </div>
       </Teleport>

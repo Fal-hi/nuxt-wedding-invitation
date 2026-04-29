@@ -154,41 +154,41 @@ defineExpose({ startAutoScroll });
     <Teleport to="body">
       <div
         v-if="isOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 transition-all duration-300"
         @click.self="closeLightbox"
       >
         <div
-          class="relative flex max-h-[90vh] w-full max-w-4xl items-center justify-center"
+          class="relative flex max-h-[90vh] w-full max-w-4xl items-center justify-center animate-in fade-in zoom-in-95 duration-300"
         >
           <!-- Previous Button -->
           <button
-            class="absolute left-4 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70 md:left-8"
+            class="absolute left-4 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md transition-all hover:bg-black/70 hover:scale-110 md:left-8"
             @click="prevImage"
           >
-            ←
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
           </button>
 
           <!-- Image -->
           <img
             :src="currentImage"
             alt="Gallery preview"
-            class="max-h-[80vh] max-w-full rounded-lg object-contain"
+            class="max-h-[80vh] max-w-full rounded-2xl object-contain shadow-2xl"
           />
 
           <!-- Next Button -->
           <button
-            class="absolute right-4 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70 md:right-8"
+            class="absolute right-4 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md transition-all hover:bg-black/70 hover:scale-110 md:right-8"
             @click="nextImage"
           >
-            →
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </button>
 
           <!-- Close Button -->
           <button
-            class="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
+            class="absolute right-0 -top-12 md:-right-12 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition-all hover:bg-white/20 hover:scale-110"
             @click="closeLightbox"
           >
-            ✕
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
         </div>
       </div>

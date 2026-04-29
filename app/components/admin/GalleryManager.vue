@@ -77,97 +77,81 @@ const closePreview = () => {
 </script>
 
 <template>
-  <div class="bg-white px-4 py-5 shadow sm:rounded-lg sm:p-6">
+  <div class="card p-6 md:p-8 border border-sky-100 bg-white/95">
     <div v-if="isLoading" class="flex justify-center py-12">
-      <div
-        class="h-8 w-8 animate-spin rounded-full border-4 border-sky-500 border-t-transparent"
-      ></div>
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
     </div>
 
-    <div v-else class="space-y-8">
+    <div v-else class="space-y-10">
+      <!-- Header -->
+      <div class="relative">
+        <div class="absolute -left-4 md:-left-8 top-0 bottom-0 w-1 bg-gradient-to-b from-primary-light to-transparent rounded-r-md"></div>
+        <h3 class="font-heading text-xl md:text-2xl font-semibold text-primary-dark mb-2">
+          Galeri Foto
+        </h3>
+        <p class="text-sm text-primary">Kelola foto pre-wedding dan momen kebersamaan Anda.</p>
+      </div>
+
       <!-- Tambah Baru -->
-      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-        <h3 class="text-md mb-4 font-medium text-gray-900">
+      <div class="bg-sky-50/50 p-6 rounded-2xl border border-sky-100">
+        <h3 class="font-heading text-lg font-semibold text-primary-dark mb-4">
           Tambahkan Gambar Baru
         </h3>
-        <form
-          @submit.prevent="addImage"
-          class="grid grid-cols-1 items-end gap-4 sm:grid-cols-12"
-        >
-          <div class="sm:col-span-6">
-            <label class="block text-sm font-medium text-gray-700"
-              >URL Gambar (Link)</label
-            >
-            <input
-              type="url"
-              required
-              v-model="newImageUrl"
-              class="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm"
-              placeholder="https://..."
-            />
+        <form @submit.prevent="addImage" class="flex flex-col md:flex-row items-end gap-4">
+          <div class="w-full md:flex-1">
+            <label class="block text-sm font-medium text-gray-700 mb-2">URL Gambar (Link)</label>
+            <input type="url" required v-model="newImageUrl" class="input-field bg-white" placeholder="https://..." />
           </div>
-          <div class="sm:col-span-4">
-            <label class="block text-sm font-medium text-gray-700"
-              >Teks Alternatif (Alt)</label
-            >
-            <input
-              type="text"
-              v-model="newImageAlt"
-              class="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm"
-              placeholder="Pre-wedding 1"
-            />
+          <div class="w-full md:w-1/3">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Teks Alternatif (Alt)</label>
+            <input type="text" v-model="newImageAlt" class="input-field bg-white" placeholder="Pre-wedding 1" />
           </div>
-          <div class="sm:col-span-2">
-            <button
-              type="submit"
-              :disabled="isAdding"
-              class="inline-flex w-full justify-center rounded-md border border-transparent bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 disabled:opacity-50"
-            >
-              <span v-if="!isAdding">Tambah</span>
-              <span v-else>Memuat...</span>
+          <div class="w-full md:w-auto">
+            <button type="submit" :disabled="isAdding" class="btn-primary w-full md:w-auto flex justify-center py-3">
+              <span v-if="!isAdding" class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Tambah
+              </span>
+              <span v-else class="flex items-center gap-2">
+                <div class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                Memuat...
+              </span>
             </button>
           </div>
         </form>
       </div>
 
+      <div class="divider"></div>
+
       <!-- Grid Gambar -->
       <div>
-        <h3 class="text-md mb-4 font-medium text-gray-900">
-          Daftar Foto Galeri ({{ images.length }})
-        </h3>
-        <div
-          v-if="images.length === 0"
-          class="rounded-lg border-2 border-dashed py-6 text-center text-gray-500"
-        >
-          Belum ada foto galeri.
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="font-heading text-lg font-semibold text-primary-dark">
+            Daftar Foto Galeri ({{ images.length }})
+          </h3>
         </div>
-        <div
-          v-else
-          class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-        >
+        
+        <div v-if="images.length === 0" class="rounded-2xl border-2 border-dashed border-sky-200 bg-sky-50/30 py-12 text-center text-primary flex flex-col items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="mb-4 text-sky-300"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+          <p>Belum ada foto galeri.</p>
+        </div>
+        
+        <div v-else class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           <div
             v-for="image in images"
             :key="image.id"
-            class="group relative cursor-pointer overflow-hidden rounded-lg border bg-gray-100"
+            class="group relative cursor-pointer overflow-hidden rounded-xl border border-sky-100 bg-gray-100 shadow-sm hover:shadow-md transition-all"
             @click="openPreview(image)"
           >
-            <img
-              :src="image.image_url"
-              :alt="image.alt_text"
-              class="h-40 w-full object-cover transition-transform group-hover:scale-105"
-            />
-            <div
-              class="absolute inset-x-0 bottom-0 flex items-end justify-between bg-gradient-to-t from-black/70 to-transparent p-2 pt-6 opacity-0 transition-opacity group-hover:opacity-100"
-            >
-              <span class="max-w-[70%] truncate text-xs text-white">{{
-                image.alt_text
-              }}</span>
+            <img :src="image.image_url" :alt="image.alt_text" class="h-40 w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+            <div class="absolute inset-x-0 bottom-0 flex items-end justify-between bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 pt-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+              <span class="max-w-[70%] truncate text-xs font-medium text-white shadow-sm">{{ image.alt_text }}</span>
               <button
                 @click.stop="removeImage(image.id)"
-                class="rounded bg-black/50 p-1 p-1.5 text-red-400 hover:bg-black/70 hover:text-red-300"
+                class="rounded-lg bg-red-500/80 p-1.5 text-white hover:bg-red-600 transition-colors backdrop-blur-sm"
                 title="Hapus foto"
               >
-                Hapus
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
               </button>
             </div>
           </div>
@@ -177,24 +161,13 @@ const closePreview = () => {
 
     <!-- Preview Modal -->
     <Teleport to="body">
-      <div
-        v-if="isPreviewOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
-        @click.self="closePreview"
-      >
-        <div class="relative w-full max-w-4xl">
-          <button
-            @click="closePreview"
-            class="absolute -top-10 right-0 text-white hover:text-gray-300"
-          >
-            <X class="h-8 w-8" />
+      <div v-if="isPreviewOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4" @click.self="closePreview">
+        <div class="relative w-full max-w-4xl animate-in fade-in zoom-in-95 duration-300">
+          <button @click="closePreview" class="absolute -top-12 right-0 md:-right-12 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors">
+            <X class="h-6 w-6" />
           </button>
-          <img
-            :src="selectedImage?.image_url"
-            :alt="selectedImage?.alt_text"
-            class="max-h-[80vh] w-full rounded-lg object-contain"
-          />
-          <p v-if="selectedImage?.alt_text" class="mt-4 text-center text-white">
+          <img :src="selectedImage?.image_url" :alt="selectedImage?.alt_text" class="max-h-[80vh] w-full rounded-xl object-contain shadow-2xl" />
+          <p v-if="selectedImage?.alt_text" class="mt-4 text-center font-medium text-white/90">
             {{ selectedImage.alt_text }}
           </p>
         </div>

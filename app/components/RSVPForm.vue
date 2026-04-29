@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { Send, Check, X, User } from "lucide-vue-next";
+import { Send, X, User, Heart } from "lucide-vue-next";
 import type { WeddingInfo } from "~/types";
 import FormatDate from "~/utils/FormatDate.vue";
 
@@ -140,15 +140,15 @@ const resetForm = () => {
 
 <template>
   <section class="section relative overflow-hidden">
-    <div class="absolute inset-0 pointer-events-none">
+    <div class="pointer-events-none absolute inset-0">
       <div
-        class="absolute right-16 top-8 h-36 w-36 rounded-full bg-white/30 blur-3xl transform-gpu"
+        class="absolute right-16 top-8 h-36 w-36 transform-gpu rounded-full bg-white/30 blur-3xl"
       ></div>
       <div
-        class="absolute bottom-12 left-10 h-44 w-44 rounded-full bg-white/30 blur-3xl transform-gpu"
+        class="absolute bottom-12 left-10 h-44 w-44 transform-gpu rounded-full bg-white/30 blur-3xl"
       ></div>
       <div
-        class="absolute left-1/3 top-1/2 h-20 w-20 rounded-full bg-white/30 blur-2xl transform-gpu"
+        class="absolute left-1/3 top-1/2 h-20 w-20 transform-gpu rounded-full bg-white/30 blur-2xl"
       ></div>
     </div>
     <div class="container-custom relative z-10">
@@ -201,7 +201,7 @@ const resetForm = () => {
                 "
                 :disabled="!canSelectAttendance"
               >
-                <Check class="h-5 w-5" />
+                <Heart class="h-5 w-5" />
                 Hadir
               </button>
               <button
@@ -282,7 +282,7 @@ const resetForm = () => {
           <div
             class="bg-primary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
           >
-            <Check class="h-8 w-8 text-white" />
+            <Heart class="h-8 w-8 text-white" />
           </div>
           <h3 class="font-heading text-primary mb-2 text-xl">Terima Kasih!</h3>
           <p class="text-text-muted mb-4">
@@ -297,28 +297,34 @@ const resetForm = () => {
     <Teleport to="body">
       <div
         v-if="showPopup"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-md transition-all duration-300"
         @click.self="closePopup"
       >
         <div
-          class="card relative w-full max-w-lg rounded-2xl bg-white p-6 text-center"
+          class="card animate-in fade-in zoom-in-95 relative w-full max-w-lg rounded-3xl border border-white bg-white/95 p-8 text-center shadow-2xl duration-300"
         >
           <div
-            class="bg-primary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
+            class="from-primary to-primary-light mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br shadow-lg"
           >
-            <Check class="h-8 w-8 text-white" />
+            <Heart class="h-10 w-10 text-white" />
           </div>
-          <h3 class="font-heading text-primary mb-2 text-xl">Terima Kasih!</h3>
-          <p class="text-primary-light mb-4">
-            Alasan ketidakhadiran Anda telah kami terima. Semoga Anda dan
-            keluarga sehat selalu.
+          <h3 class="font-heading text-primary-dark mb-3 text-2xl font-bold">
+            Terima Kasih!
+          </h3>
+          <p class="mb-6 leading-relaxed text-gray-600">
+            Konfirmasi RSVP Anda telah kami terima.
           </p>
           <p
-            class="bg-muted-light text-accent rounded-lg p-3 text-center font-medium"
+            class="text-primary-dark rounded-xl border border-sky-100 bg-sky-50 p-4 text-center font-medium shadow-sm"
           >
             "{{ name }}"
           </p>
-          <p class="text-muted mt-4 text-sm">Klik di mana saja untuk menutup</p>
+          <button
+            @click="closePopup"
+            class="absolute right-4 top-4 rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+          >
+            <X class="h-5 w-5" />
+          </button>
         </div>
       </div>
     </Teleport>
@@ -326,33 +332,35 @@ const resetForm = () => {
     <Teleport to="body">
       <div
         v-if="showConfirmNotComing"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-md transition-all duration-300"
         @click.self="cancelNotComing"
       >
         <div
-          class="card relative w-full max-w-lg rounded-2xl bg-white p-6 text-center"
+          class="card animate-in fade-in zoom-in-95 relative w-full max-w-lg rounded-3xl border border-white bg-white/95 p-8 text-center shadow-2xl duration-300"
         >
           <div
-            class="bg-primary-light mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
+            class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-gray-200 to-gray-300 shadow-md"
           >
-            <X class="h-8 w-8 text-white" />
+            <X class="h-10 w-10 text-gray-500" />
           </div>
-          <h3 class="font-heading text-accent mb-2 text-xl">Konfirmasi</h3>
-          <p class="text-primary-light mb-4">
-            Apakah Anda yakin tidak dapat menghadiri acara pernikahan kami?
-            mohon berikan alasan Anda tidak dapat menghadiri pernikahan kami
+          <h3 class="font-heading mb-3 text-2xl font-bold text-gray-800">
+            Konfirmasi
+          </h3>
+          <p class="mb-6 text-sm leading-relaxed text-gray-600">
+            Apakah Anda yakin tidak dapat menghadiri acara pernikahan kami?<br />
+            Mohon berikan alasan Anda tidak dapat menghadiri pernikahan kami.
           </p>
           <textarea
             v-model="reason"
-            class="input-field min-h-32"
-            placeholder="Masukkan alasan Anda"
+            class="input-field mb-6 min-h-32 resize-none border-gray-200 bg-gray-50 focus:bg-white"
+            placeholder="Masukkan alasan Anda..."
             autofocus
           ></textarea>
-          <div class="mt-4 flex gap-4">
+          <div class="flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
               @click="cancelNotComing"
-              class="btn-secondary flex-1"
+              class="w-full rounded-full border-2 border-gray-200 bg-white px-6 py-3 font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 sm:w-1/2"
               :disabled="isLoading"
             >
               Batal
@@ -360,12 +368,12 @@ const resetForm = () => {
             <button
               type="button"
               @click="confirmNotComing"
-              class="btn-primary flex flex-1 items-center justify-center gap-2"
+              class="btn-primary flex w-full items-center justify-center gap-2 py-3 sm:w-1/2"
               :disabled="isLoading"
             >
               <span
                 v-if="isLoading"
-                class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+                class="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"
               ></span>
               {{ isLoading ? "Menyimpan..." : "Kirim Konfirmasi" }}
             </button>

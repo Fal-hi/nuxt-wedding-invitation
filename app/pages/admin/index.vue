@@ -46,58 +46,64 @@ const handleLogout = () => {
 </script>
 
 <template>
-  <div v-if="!isAuthenticated" class="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
-    <div class="w-full max-w-md space-y-8 bg-white p-8 rounded-xl shadow-md border border-gray-100">
+  <div v-if="!isAuthenticated" class="relative flex min-h-screen items-center justify-center overflow-hidden bg-sky-gradient px-4 py-12 sm:px-6 lg:px-8">
+    <div class="absolute inset-0 pointer-events-none">
+      <div class="absolute left-10 top-10 h-32 w-32 rounded-full bg-white/30 blur-3xl transform-gpu"></div>
+      <div class="absolute bottom-20 right-20 h-48 w-48 rounded-full bg-white/30 blur-3xl transform-gpu"></div>
+    </div>
+    
+    <div class="card relative z-10 w-full max-w-md space-y-8 p-8 border border-white/50 bg-white/90 backdrop-blur-sm">
       <div>
-        <h2 class="mt-2 text-center text-3xl font-bold tracking-tight text-gray-900">
+        <h2 class="mt-2 text-center font-heading text-4xl font-bold tracking-tight text-primary-dark">
           Administrator
         </h2>
-        <p class="mt-2 text-center text-sm text-gray-600">
+        <p class="mt-2 text-center text-sm text-primary">
           Masuk untuk mengubah data undangan pernikahan
         </p>
+        <div class="divider mt-4"></div>
       </div>
       <form class="mt-8 space-y-6" @submit.prevent="handleLogin">
-        <div class="space-y-4 rounded-md shadow-sm">
+        <div class="space-y-4">
           <div>
             <label for="username" class="sr-only">Username</label>
-            <input id="username" v-model="username" type="text" required class="relative block w-full rounded-md border-0 py-2.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6" placeholder="Username">
+            <input id="username" v-model="username" type="text" required class="input-field" placeholder="Username">
           </div>
           <div>
             <label for="password" class="sr-only">Password</label>
-            <input id="password" v-model="password" type="password" required class="relative block w-full rounded-md border-0 py-2.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6" placeholder="Password">
+            <input id="password" v-model="password" type="password" required class="input-field" placeholder="Password">
           </div>
         </div>
 
-        <div v-if="loginError" class="text-sm text-red-600 text-center font-medium bg-red-50 p-2 rounded">
+        <div v-if="loginError" class="text-sm text-red-600 text-center font-medium bg-red-50 border border-red-100 p-3 rounded-xl">
           Username atau password salah!
         </div>
 
         <div>
-           <button type="submit" :disabled="isLoggingIn" class="group relative flex w-full justify-center rounded-md bg-sky-600 px-3 py-3 text-sm font-semibold text-white hover:bg-sky-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 disabled:opacity-50 transition-colors">
+           <button type="submit" :disabled="isLoggingIn" class="btn-primary w-full flex justify-center py-3">
             <span v-if="!isLoggingIn">Masuk Ke Pengaturan</span>
-            <span v-else>Memverifikasi...</span>
+            <span v-else class="animate-pulse">Memverifikasi...</span>
           </button>
         </div>
       </form>
-      <div class="text-center mt-6 pt-4 border-t border-gray-100">
-         <NuxtLink to="/" class="text-sm font-medium text-gray-500 hover:text-sky-600 transition-colors">
+      <div class="text-center mt-6 pt-6 border-t border-sky-100">
+         <NuxtLink to="/" class="text-sm font-medium text-primary hover:text-primary-dark transition-colors">
           &larr; Kembali ke Undangan
         </NuxtLink>
       </div>
     </div>
   </div>
 
-  <div v-else class="min-h-screen bg-gray-50 font-sans text-gray-900">
-    <header class="bg-white shadow">
-      <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
-        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
+  <div v-else class="min-h-screen bg-background font-sans text-gray-900 pb-12">
+    <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md shadow-sm border-b border-sky-100">
+      <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
+        <h1 class="font-heading text-2xl sm:text-3xl font-bold tracking-tight text-primary-dark">
           Admin Dashboard
         </h1>
         <div class="flex items-center gap-4">
-          <NuxtLink to="/" class="hidden md:block text-sm font-medium text-sky-600 hover:text-sky-500 hover:underline">
+          <NuxtLink to="/" class="hidden md:block text-sm font-medium text-primary hover:text-primary-dark hover:underline">
             Lihat Undangan &rarr;
           </NuxtLink>
-          <button @click="handleLogout" class="text-sm font-medium text-red-600 hover:text-red-500 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-md transition-colors">
+          <button @click="handleLogout" class="text-sm font-medium text-red-600 hover:text-white bg-red-50 hover:bg-red-500 px-4 py-2 rounded-full transition-colors border border-red-200 hover:border-red-500">
             Logout
           </button>
         </div>
@@ -105,13 +111,13 @@ const handleLogout = () => {
     </header>
     
     <main>
-      <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-        <div class="mb-6 flex space-x-4 border-b border-gray-200 px-4 sm:px-0">
+      <div class="mx-auto max-w-7xl py-8 sm:px-6 lg:px-8">
+        <div class="mb-8 flex overflow-x-auto hide-scrollbar space-x-2 px-4 sm:px-0 py-2">
           <button
             @click="activeTab = 'info'"
             :class="[
-              activeTab === 'info' ? 'border-sky-500 text-sky-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-              'whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium transition-colors'
+              activeTab === 'info' ? 'bg-primary text-white shadow-md' : 'bg-white text-gray-600 hover:bg-sky-50 border border-sky-100',
+              'whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-medium transition-all'
             ]"
           >
             Info Undangan
@@ -119,8 +125,8 @@ const handleLogout = () => {
           <button
             @click="activeTab = 'gallery'"
             :class="[
-              activeTab === 'gallery' ? 'border-sky-500 text-sky-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-              'whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium transition-colors'
+              activeTab === 'gallery' ? 'bg-primary text-white shadow-md' : 'bg-white text-gray-600 hover:bg-sky-50 border border-sky-100',
+              'whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-medium transition-all'
             ]"
           >
             Galeri Foto
@@ -128,8 +134,8 @@ const handleLogout = () => {
           <button
             @click="activeTab = 'guests'"
             :class="[
-              activeTab === 'guests' ? 'border-sky-500 text-sky-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-              'whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium transition-colors'
+              activeTab === 'guests' ? 'bg-primary text-white shadow-md' : 'bg-white text-gray-600 hover:bg-sky-50 border border-sky-100',
+              'whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-medium transition-all'
             ]"
           >
             Data Tamu & Ucapan
@@ -137,15 +143,15 @@ const handleLogout = () => {
           <button
             @click="activeTab = 'bank'"
             :class="[
-              activeTab === 'bank' ? 'border-sky-500 text-sky-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-              'whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium transition-colors'
+              activeTab === 'bank' ? 'bg-primary text-white shadow-md' : 'bg-white text-gray-600 hover:bg-sky-50 border border-sky-100',
+              'whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-medium transition-all'
             ]"
           >
             Rekening
           </button>
         </div>
 
-        <div class="px-4 pb-12 sm:px-0">
+        <div class="px-4 sm:px-0">
           <WeddingInfoForm v-if="activeTab === 'info'" />
           <GalleryManager v-if="activeTab === 'gallery'" />
           <GuestDataManager v-if="activeTab === 'guests'" />
@@ -155,3 +161,12 @@ const handleLogout = () => {
     </main>
   </div>
 </template>
+<style scoped>
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+</style>

@@ -131,211 +131,142 @@ const deleteAccount = async (id: string) => {
 </script>
 
 <template>
-  <div class="bg-white px-4 py-5 shadow sm:rounded-lg sm:p-6">
+  <div class="card p-6 md:p-8 border border-sky-100 bg-white/95">
     <div v-if="isLoading" class="flex justify-center py-12">
-      <div
-        class="h-8 w-8 animate-spin rounded-full border-4 border-sky-500 border-t-transparent"
-      ></div>
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
     </div>
 
-    <div v-else class="space-y-8">
+    <div v-else class="space-y-10">
+      <!-- Header -->
+      <div class="relative">
+        <div class="absolute -left-4 md:-left-8 top-0 bottom-0 w-1 bg-gradient-to-b from-primary-light to-transparent rounded-r-md"></div>
+        <h3 class="font-heading text-xl md:text-2xl font-semibold text-primary-dark mb-2">
+          Rekening & Hadiah
+        </h3>
+        <p class="text-sm text-primary">Kelola opsi rekening untuk fitur amplop digital.</p>
+      </div>
+
       <!-- Tambah Baru -->
-      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-        <h3 class="text-md mb-4 font-medium text-gray-900">
+      <div class="bg-sky-50/50 p-6 rounded-2xl border border-sky-100">
+        <h3 class="font-heading text-lg font-semibold text-primary-dark mb-4">
           Tambahkan Rekening Baru
         </h3>
-        <form
-          @submit.prevent="addAccount"
-          class="grid grid-cols-1 items-end gap-4 sm:grid-cols-12"
-        >
-          <div class="sm:col-span-3">
-            <label class="block text-sm font-medium text-gray-700"
-              >Nama Bank</label
-            >
-            <select
-              required
-              v-model="newBankName"
-              class="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm"
-            >
+        <form @submit.prevent="addAccount" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+          <div class="md:col-span-3">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Nama Bank</label>
+            <select required v-model="newBankName" class="input-field bg-white">
               <option value="" disabled>Pilih Bank</option>
-              <option
-                v-for="bank in bankOptions"
-                :key="bank.id"
-                :value="bank.name"
-              >
+              <option v-for="bank in bankOptions" :key="bank.id" :value="bank.name">
                 {{ bank.name }}
               </option>
             </select>
           </div>
-          <div class="sm:col-span-3">
-            <label class="block text-sm font-medium text-gray-700"
-              >Nomor Rekening</label
-            >
-            <input
-              type="text"
-              required
-              v-model="newAccountNumber"
-              class="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm"
-              placeholder="1234567890"
-            />
+          <div class="md:col-span-3">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Nomor Rekening</label>
+            <input type="text" required v-model="newAccountNumber" class="input-field bg-white" placeholder="1234567890" />
           </div>
-          <div class="sm:col-span-3">
-            <label class="block text-sm font-medium text-gray-700"
-              >Nama Pemilik Rekening</label
-            >
-            <input
-              type="text"
-              required
-              v-model="newAccountHolder"
-              class="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm"
-              placeholder="Rina Susilowati"
-            />
+          <div class="md:col-span-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Nama Pemilik Rekening</label>
+            <input type="text" required v-model="newAccountHolder" class="input-field bg-white" placeholder="Rina Susilowati" />
           </div>
-          <div class="sm:col-span-3">
-            <button
-              type="submit"
-              :disabled="isAdding"
-              class="inline-flex w-full justify-center rounded-md border border-transparent bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 disabled:opacity-50"
-            >
-              <span v-if="!isAdding">Tambah</span>
-              <span v-else>Memuat...</span>
+          <div class="md:col-span-2">
+            <button type="submit" :disabled="isAdding" class="btn-primary w-full flex justify-center py-3">
+              <span v-if="!isAdding" class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Tambah
+              </span>
+              <span v-else class="flex items-center gap-2">
+                <div class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+              </span>
             </button>
           </div>
         </form>
       </div>
 
+      <div class="divider"></div>
+
       <!-- Daftar Rekening -->
       <div>
-        <h3 class="text-md mb-4 font-medium text-gray-900">
-          Daftar Rekening ({{ accounts.length }})
-        </h3>
-        <div
-          v-if="accounts.length === 0"
-          class="rounded-lg border-2 border-dashed py-6 text-center text-gray-500"
-        >
-          Belum ada rekening yang ditambahkan.
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="font-heading text-lg font-semibold text-primary-dark">
+            Daftar Rekening ({{ accounts.length }})
+          </h3>
         </div>
-        <div v-else class="overflow-hidden rounded-lg border shadow-sm">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th
-                  scope="col"
-                  class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-                >
-                  Bank
-                </th>
-                <th
-                  scope="col"
-                  class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-                >
-                  No. Rekening
-                </th>
-                <th
-                  scope="col"
-                  class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-                >
-                  Atas Nama
-                </th>
-                <th
-                  scope="col"
-                  class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500"
-                >
-                  Aksi
-                </th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200 bg-white">
-              <tr
-                v-for="account in accounts"
-                :key="account.id"
-                class="transition-colors hover:bg-gray-50"
-              >
-                <td class="whitespace-nowrap px-6 py-4">
-                  <template v-if="editingId === account.id">
-                    <select
-                      v-model="editBankName"
-                      class="w-full rounded border border-gray-300 p-1 text-sm"
-                    >
-                      <option
-                        v-for="bank in bankOptions"
-                        :key="bank.id"
-                        :value="bank.name"
-                      >
-                        {{ bank.name }}
-                      </option>
-                    </select>
-                  </template>
-                  <template v-else>
-                    <span
-                      class="inline-flex items-center rounded-md bg-sky-50 px-2 py-1 text-sm font-semibold text-sky-700"
-                    >
-                      {{ account.bank_name }}
-                    </span>
-                  </template>
-                </td>
-                <td class="whitespace-nowrap px-6 py-4">
-                  <template v-if="editingId === account.id">
-                    <input
-                      v-model="editAccountNumber"
-                      class="w-full rounded border border-gray-300 p-1 font-mono text-sm"
-                    />
-                  </template>
-                  <template v-else>
-                    <span class="font-mono text-sm text-gray-900">
-                      {{ account.account_number }}
-                    </span>
-                  </template>
-                </td>
-                <td class="whitespace-nowrap px-6 py-4">
-                  <template v-if="editingId === account.id">
-                    <input
-                      v-model="editAccountHolder"
-                      class="w-full rounded border border-gray-300 p-1 text-sm"
-                    />
-                  </template>
-                  <template v-else>
-                    <span class="text-sm text-gray-600">
-                      {{ account.account_holder }}
-                    </span>
-                  </template>
-                </td>
-                <td
-                  class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium"
-                >
-                  <template v-if="editingId === account.id">
-                    <button
-                      @click="saveEdit"
-                      :disabled="isSaving"
-                      class="mr-2 rounded px-2 py-1 font-semibold text-green-600 transition-colors hover:bg-green-50"
-                    >
-                      {{ isSaving ? "Menyimpan..." : "Simpan" }}
-                    </button>
-                    <button
-                      @click="cancelEdit"
-                      class="rounded px-2 py-1 font-semibold text-gray-600 transition-colors hover:bg-gray-100"
-                    >
-                      Batal
-                    </button>
-                  </template>
-                  <template v-else>
-                    <button
-                      @click="startEdit(account)"
-                      class="mr-2 rounded px-2 py-1 font-semibold text-blue-600 transition-colors hover:bg-blue-50"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      @click="deleteAccount(account.id)"
-                      class="rounded px-2 py-1 font-semibold text-red-500 transition-colors hover:bg-red-50 hover:text-red-700"
-                    >
-                      Hapus
-                    </button>
-                  </template>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        
+        <div v-if="accounts.length === 0" class="rounded-2xl border-2 border-dashed border-sky-200 bg-sky-50/30 py-12 text-center text-primary flex flex-col items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="mb-4 text-sky-300"><rect x="20" y="4" width="4" height="16" rx="2" ry="2"></rect><rect x="4" y="4" width="12" height="16" rx="2" ry="2"></rect><path d="M12 12h.01"></path></svg>
+          <p>Belum ada rekening yang ditambahkan.</p>
+        </div>
+        
+        <div v-else class="overflow-hidden rounded-xl border border-sky-100 shadow-sm bg-white">
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-100">
+              <thead class="bg-sky-50/50">
+                <tr>
+                  <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Bank</th>
+                  <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">No. Rekening</th>
+                  <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Atas Nama</th>
+                  <th scope="col" class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Aksi</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 bg-white">
+                <tr v-for="account in accounts" :key="account.id" class="transition-colors hover:bg-sky-50/30">
+                  <td class="whitespace-nowrap px-6 py-4">
+                    <template v-if="editingId === account.id">
+                      <select v-model="editBankName" class="input-field py-2 text-sm bg-white">
+                        <option v-for="bank in bankOptions" :key="bank.id" :value="bank.name">{{ bank.name }}</option>
+                      </select>
+                    </template>
+                    <template v-else>
+                      <span class="inline-flex items-center rounded-lg bg-sky-100 px-3 py-1.5 text-sm font-bold text-sky-800">
+                        {{ account.bank_name }}
+                      </span>
+                    </template>
+                  </td>
+                  <td class="whitespace-nowrap px-6 py-4">
+                    <template v-if="editingId === account.id">
+                      <input v-model="editAccountNumber" class="input-field py-2 font-mono text-sm bg-white" />
+                    </template>
+                    <template v-else>
+                      <span class="font-mono text-sm font-medium text-gray-900 bg-gray-50 px-2 py-1 rounded border border-gray-100">
+                        {{ account.account_number }}
+                      </span>
+                    </template>
+                  </td>
+                  <td class="whitespace-nowrap px-6 py-4">
+                    <template v-if="editingId === account.id">
+                      <input v-model="editAccountHolder" class="input-field py-2 text-sm bg-white" />
+                    </template>
+                    <template v-else>
+                      <span class="text-sm font-medium text-gray-700">
+                        {{ account.account_holder }}
+                      </span>
+                    </template>
+                  </td>
+                  <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
+                    <div class="flex items-center justify-end gap-2">
+                      <template v-if="editingId === account.id">
+                        <button @click="saveEdit" :disabled="isSaving" class="rounded-lg bg-green-50 px-3 py-1.5 font-semibold text-green-600 transition-colors hover:bg-green-100 border border-green-200">
+                          {{ isSaving ? "..." : "Simpan" }}
+                        </button>
+                        <button @click="cancelEdit" class="rounded-lg bg-gray-50 px-3 py-1.5 font-semibold text-gray-600 transition-colors hover:bg-gray-100 border border-gray-200">
+                          Batal
+                        </button>
+                      </template>
+                      <template v-else>
+                        <button @click="startEdit(account)" class="rounded-lg bg-sky-50 px-3 py-1.5 font-semibold text-sky-600 transition-colors hover:bg-sky-100 border border-sky-200">
+                          Edit
+                        </button>
+                        <button @click="deleteAccount(account.id)" class="rounded-lg bg-red-50 px-3 py-1.5 font-semibold text-red-500 transition-colors hover:bg-red-100 border border-red-200">
+                          Hapus
+                        </button>
+                      </template>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
