@@ -129,6 +129,11 @@ const totalIndividualGuests = computed(() => {
           <h3 class="text-lg font-medium leading-6 text-gray-900">
             Daftar Kehadiran (RSVP)
           </h3>
+          <span
+            class="inline-flex items-center rounded-full bg-sky-100 px-3 py-1 text-xs font-bold text-sky-800"
+          >
+            {{ rsvps.length }} Tamu
+          </span>
         </div>
         <div class="max-h-[600px] overflow-x-auto overflow-y-auto p-0">
           <table class="relative min-w-full divide-y divide-gray-200">

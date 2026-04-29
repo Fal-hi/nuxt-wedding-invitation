@@ -42,15 +42,15 @@ const scrollToContent = async () => {
   >
     <div class="bg-sky-gradient absolute"></div>
 
-    <div class="absolute inset-0 opacity-30">
+    <div class="absolute inset-0 pointer-events-none">
       <div
-        class="absolute left-10 top-10 h-32 w-32 rounded-full bg-white blur-3xl"
+        class="absolute left-10 top-10 h-32 w-32 rounded-full bg-white/30 blur-3xl transform-gpu"
       ></div>
       <div
-        class="absolute bottom-20 right-20 h-48 w-48 rounded-full bg-white blur-3xl"
+        class="absolute bottom-20 right-20 h-48 w-48 rounded-full bg-white/30 blur-3xl transform-gpu"
       ></div>
       <div
-        class="absolute left-1/4 top-1/2 h-24 w-24 rounded-full bg-white blur-2xl"
+        class="absolute left-1/4 top-1/2 h-24 w-24 rounded-full bg-white/30 blur-2xl transform-gpu"
       ></div>
     </div>
 

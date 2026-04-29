@@ -140,15 +140,15 @@ const resetForm = () => {
 
 <template>
   <section class="section relative overflow-hidden">
-    <div class="absolute inset-0 opacity-30">
+    <div class="absolute inset-0 pointer-events-none">
       <div
-        class="absolute right-16 top-8 h-36 w-36 rounded-full bg-white blur-3xl"
+        class="absolute right-16 top-8 h-36 w-36 rounded-full bg-white/30 blur-3xl transform-gpu"
       ></div>
       <div
-        class="absolute bottom-12 left-10 h-44 w-44 rounded-full bg-white blur-3xl"
+        class="absolute bottom-12 left-10 h-44 w-44 rounded-full bg-white/30 blur-3xl transform-gpu"
       ></div>
       <div
-        class="absolute left-1/3 top-1/2 h-20 w-20 rounded-full bg-white blur-2xl"
+        class="absolute left-1/3 top-1/2 h-20 w-20 rounded-full bg-white/30 blur-2xl transform-gpu"
       ></div>
     </div>
     <div class="container-custom relative z-10">

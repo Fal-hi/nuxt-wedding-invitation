@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { Copy, Check } from "lucide-vue-next";
-import type { BankAccount } from "~/types";
+import type { Bank, BankAccount } from "~/types";
 import { useSupabase } from "~/composables/useSupabase";
 
 const supabase = useSupabase();
@@ -9,15 +9,29 @@ const accounts = ref<BankAccount[]>([]);
 const isLoading = ref(true);
 const copiedId = ref<string | null>(null);
 
-onMounted(async () => {
-  const { data, error } = await supabase
-    .from("bank_accounts")
-    .select("*")
-    .order("sort_order", { ascending: true });
+const bankOptions = ref<Record<string, string>>({});
 
-  if (data && !error) {
-    accounts.value = data;
+onMounted(async () => {
+  const [accountsRes, banksRes] = await Promise.all([
+    supabase
+      .from("bank_accounts")
+      .select("*")
+      .order("sort_order", { ascending: true }),
+    supabase.from("bank").select("*"),
+  ]);
+
+  if (accountsRes.data && !accountsRes.error) {
+    accounts.value = accountsRes.data;
   }
+
+  if (banksRes.data && !banksRes.error) {
+    const optionsMap: Record<string, string> = {};
+    banksRes.data.forEach((bank: Bank) => {
+      optionsMap[bank.name] = bank.color;
+    });
+    bankOptions.value = optionsMap;
+  }
+
   isLoading.value = false;
 });
 
@@ -43,28 +57,8 @@ const copyToClipboard = async (accountNumber: string, id: string) => {
   }
 };
 
-const bankColors: Record<string, string> = {
-  BCA: "#003a8c",
-  BRI: "#00529c",
-  BNI: "#f26522",
-  Mandiri: "#003066",
-  BSI: "#006a4e",
-  CIMB: "#7b0028",
-  Danamon: "#fdc500",
-  Permata: "#006633",
-  OCBC: "#de1a22",
-  Jago: "#00c6ff",
-  Jenius: "#5046e5",
-  Gopay: "#00aed6",
-  OVO: "#4c3494",
-  Dana: "#108ee9",
-  ShopeePay: "#ee4d2d",
-  SeaBank: "#eb5f00",
-  LinkAja: "#e2231a",
-};
-
 const getBankColor = (bankName: string): string => {
-  for (const [key, color] of Object.entries(bankColors)) {
+  for (const [key, color] of Object.entries(bankOptions.value)) {
     if (bankName.toLowerCase().includes(key.toLowerCase())) {
       return color;
     }
@@ -75,15 +69,15 @@ const getBankColor = (bankName: string): string => {
 
 <template>
   <section class="section relative overflow-hidden">
-    <div class="absolute inset-0 opacity-30">
+    <div class="absolute inset-0 pointer-events-none">
       <div
-        class="absolute left-16 top-14 h-28 w-28 rounded-full bg-white blur-3xl"
+        class="absolute left-16 top-14 h-28 w-28 rounded-full bg-white/30 blur-3xl transform-gpu"
       ></div>
       <div
-        class="absolute bottom-10 right-16 h-36 w-36 rounded-full bg-white blur-3xl"
+        class="absolute bottom-10 right-16 h-36 w-36 rounded-full bg-white/30 blur-3xl transform-gpu"
       ></div>
       <div
-        class="absolute right-1/4 top-1/3 h-24 w-24 rounded-full bg-white blur-2xl"
+        class="absolute right-1/4 top-1/3 h-24 w-24 rounded-full bg-white/30 blur-2xl transform-gpu"
       ></div>
     </div>
     <div class="container-custom relative z-10">

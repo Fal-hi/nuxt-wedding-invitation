@@ -99,10 +99,10 @@ defineExpose({ startAutoScroll });
 
 <template>
   <section class="section relative overflow-hidden">
-    <div class="absolute inset-0 opacity-30">
-      <div class="absolute left-20 top-12 h-40 w-40 rounded-full bg-white blur-3xl"></div>
-      <div class="absolute bottom-16 right-10 h-32 w-32 rounded-full bg-white blur-3xl"></div>
-      <div class="absolute left-1/2 top-1/3 h-24 w-24 rounded-full bg-white blur-2xl"></div>
+    <div class="absolute inset-0 pointer-events-none">
+      <div class="absolute left-20 top-12 h-40 w-40 rounded-full bg-white/30 blur-3xl transform-gpu"></div>
+      <div class="absolute bottom-16 right-10 h-32 w-32 rounded-full bg-white/30 blur-3xl transform-gpu"></div>
+      <div class="absolute left-1/2 top-1/3 h-24 w-24 rounded-full bg-white/30 blur-2xl transform-gpu"></div>
     </div>
     <div class="container-custom relative z-10">
       <div class="mb-12 text-center" data-aos="fade-up">

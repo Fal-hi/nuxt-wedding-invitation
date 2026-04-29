@@ -22,15 +22,15 @@ const groom = computed<CoupleMember>(() => ({
 
 <template>
   <section class="section relative overflow-hidden">
-    <div class="absolute inset-0 opacity-30">
+    <div class="absolute inset-0 pointer-events-none">
       <div
-        class="absolute right-10 top-16 h-36 w-36 rounded-full bg-white blur-3xl"
+        class="absolute right-10 top-16 h-36 w-36 rounded-full bg-white/30 blur-3xl transform-gpu"
       ></div>
       <div
-        class="absolute bottom-10 left-20 h-40 w-40 rounded-full bg-white blur-3xl"
+        class="absolute bottom-10 left-20 h-40 w-40 rounded-full bg-white/30 blur-3xl transform-gpu"
       ></div>
       <div
-        class="absolute right-1/3 top-1/2 h-28 w-28 rounded-full bg-white blur-2xl"
+        class="absolute right-1/3 top-1/2 h-28 w-28 rounded-full bg-white/30 blur-2xl transform-gpu"
       ></div>
     </div>
     <div class="container-custom relative z-10">

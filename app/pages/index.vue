@@ -79,15 +79,15 @@ const handleOpenInvitation = () => {
     v-if="isAppLoading"
     class="relative flex min-h-screen flex-col items-center justify-center overflow-hidden"
   >
-    <div class="absolute inset-0 z-0 opacity-30">
+    <div class="absolute inset-0 z-0 pointer-events-none">
       <div
-        class="absolute left-10 top-10 h-32 w-32 rounded-full bg-white blur-3xl"
+        class="absolute left-10 top-10 h-32 w-32 rounded-full bg-white/30 blur-3xl transform-gpu"
       ></div>
       <div
-        class="absolute bottom-20 right-20 h-48 w-48 rounded-full bg-white blur-3xl"
+        class="absolute bottom-20 right-20 h-48 w-48 rounded-full bg-white/30 blur-3xl transform-gpu"
       ></div>
       <div
-        class="absolute left-1/4 top-1/2 h-24 w-24 rounded-full bg-white blur-2xl"
+        class="absolute left-1/4 top-1/2 h-24 w-24 rounded-full bg-white/30 blur-2xl transform-gpu"
       ></div>
     </div>
 
@@ -148,18 +148,18 @@ const handleOpenInvitation = () => {
       <Guestbook ref="guestbookRef" />
 
       <footer class="section relative overflow-hidden text-center">
-        <div class="absolute inset-0 opacity-30">
+        <div class="absolute inset-0 pointer-events-none">
           <div
-            class="absolute right-10 top-8 h-28 w-28 rounded-full bg-white blur-3xl"
+            class="absolute right-10 top-8 h-28 w-28 rounded-full bg-white/30 blur-3xl transform-gpu"
           ></div>
           <div
-            class="absolute bottom-8 left-16 h-32 w-32 rounded-full bg-white blur-3xl"
+            class="absolute bottom-8 left-16 h-32 w-32 rounded-full bg-white/30 blur-3xl transform-gpu"
           ></div>
         </div>
         <div class="container-custom relative z-10">
           <h3 class="font-heading text-accent mb-2 text-xl">
-            {{ weddingInfo?.bride_name?.split(" ")[0] || "Rina" }} &amp;
-            {{ weddingInfo?.groom_name?.split(" ")[0] || "Budi" }}
+            {{ weddingInfo?.bride_nickname }} &amp;
+            {{ weddingInfo?.groom_nickname }}
           </h3>
           <p class="text-primary mb-4 text-sm">
             Terima kasih atas doa dan kehadiran Anda

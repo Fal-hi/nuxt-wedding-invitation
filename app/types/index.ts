@@ -73,3 +73,9 @@ export interface BankAccount {
   bank_logo?: string;
   sort_order: number;
 }
+
+export interface Bank {
+  id: number;
+  name: string;
+  color: string;
+}
