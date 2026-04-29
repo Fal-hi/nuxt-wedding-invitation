@@ -1,10 +1,27 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { X } from "lucide-vue-next";
 
 const supabase = useSupabase();
 const isLoading = ref(true);
 const isSaving = ref(false);
 const saveSuccess = ref(false);
+
+const isPreviewOpen = ref(false);
+const selectedImageUrl = ref("");
+
+const openPreview = (url: string) => {
+  if (!url) return;
+  selectedImageUrl.value = url;
+  isPreviewOpen.value = true;
+  document.body.style.overflow = "hidden";
+};
+
+const closePreview = () => {
+  isPreviewOpen.value = false;
+  selectedImageUrl.value = "";
+  document.body.style.overflow = "";
+};
 
 const formData = ref({
   bride_nickname: "",
@@ -113,7 +130,7 @@ const saveInfo = async () => {
                 <input type="url" v-model="formData.bride_photo" class="input-field bg-sky-50/30" placeholder="https://..." />
               </div>
               <div v-if="formData.bride_photo" class="w-full md:w-1/4 flex justify-center">
-                <img :src="formData.bride_photo" class="h-24 w-24 rounded-full object-cover shadow-md border-2 border-pink-200" alt="Preview Foto Mempelai Wanita" />
+                <img @click="openPreview(formData.bride_photo)" :src="formData.bride_photo" class="h-24 w-24 rounded-full object-cover shadow-md border-2 border-pink-200 cursor-pointer hover:opacity-80 transition-opacity" alt="Preview Foto Mempelai Wanita" />
               </div>
             </div>
             <div class="sm:col-span-3">
@@ -150,7 +167,7 @@ const saveInfo = async () => {
                 <input type="url" v-model="formData.groom_photo" class="input-field bg-sky-50/30" placeholder="https://..." />
               </div>
               <div v-if="formData.groom_photo" class="w-full md:w-1/4 flex justify-center">
-                <img :src="formData.groom_photo" class="h-24 w-24 rounded-full object-cover shadow-md border-2 border-blue-200" alt="Preview Foto Mempelai Pria" />
+                <img @click="openPreview(formData.groom_photo)" :src="formData.groom_photo" class="h-24 w-24 rounded-full object-cover shadow-md border-2 border-blue-200 cursor-pointer hover:opacity-80 transition-opacity" alt="Preview Foto Mempelai Pria" />
               </div>
             </div>
             <div class="sm:col-span-3">
@@ -256,5 +273,16 @@ const saveInfo = async () => {
         </button>
       </div>
     </form>
+
+    <Teleport to="body">
+      <div v-if="isPreviewOpen" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 transition-all duration-300" @click.self="closePreview">
+        <div class="relative w-full max-w-4xl flex justify-center animate-in fade-in zoom-in-95 duration-300">
+          <button @click="closePreview" class="absolute -top-12 right-0 md:-right-12 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition-all hover:bg-white/20 hover:scale-110">
+            <X class="h-6 w-6" />
+          </button>
+          <img :src="selectedImageUrl" alt="Preview Foto Mempelai" class="max-h-[85vh] max-w-full rounded-2xl object-contain shadow-2xl" />
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
