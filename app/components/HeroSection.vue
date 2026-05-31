@@ -3,6 +3,8 @@ import { Heart } from "lucide-vue-next";
 
 const props = defineProps<{
   isOpened?: boolean;
+  guestName?: string;
+  guestTitle?: string;
 }>();
 
 const emit = defineEmits<{
@@ -27,12 +29,6 @@ const scrollToEventDetails = async () => {
 
 const scrollToContent = async () => {
   emit("openInvitation");
-  await nextTick();
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  const content = document.getElementById("content");
-  if (content) {
-    content.scrollIntoView({ behavior: "smooth" });
-  }
 };
 </script>
 
@@ -42,15 +38,15 @@ const scrollToContent = async () => {
   >
     <div class="bg-sky-gradient absolute"></div>
 
-    <div class="absolute inset-0 pointer-events-none">
+    <div class="pointer-events-none absolute inset-0">
       <div
-        class="absolute left-10 top-10 h-32 w-32 rounded-full bg-white/30 blur-3xl transform-gpu"
+        class="absolute left-10 top-10 h-32 w-32 transform-gpu rounded-full bg-white/30 blur-3xl"
       ></div>
       <div
-        class="absolute bottom-20 right-20 h-48 w-48 rounded-full bg-white/30 blur-3xl transform-gpu"
+        class="absolute bottom-20 right-20 h-48 w-48 transform-gpu rounded-full bg-white/30 blur-3xl"
       ></div>
       <div
-        class="absolute left-1/4 top-1/2 h-24 w-24 rounded-full bg-white/30 blur-2xl transform-gpu"
+        class="absolute left-1/4 top-1/2 h-24 w-24 transform-gpu rounded-full bg-white/30 blur-2xl"
       ></div>
     </div>
 
@@ -59,45 +55,74 @@ const scrollToContent = async () => {
       data-aos="fade-in"
       data-aos-duration="1500"
     >
+      <Transition name="cover">
+        <div v-if="!isOpened && guestName" class="mb-4 flex flex-col gap-2">
+          <p
+            class="text-primary-light text-xs font-medium uppercase tracking-[0.2em]"
+          >
+            Kepada Yth. {{ guestTitle }}
+          </p>
+          <p
+            class="font-heading text-primary my-6 text-5xl font-semibold md:text-4xl lg:text-5xl"
+          >
+            {{ guestName }}
+          </p>
+          <div class="flex items-center justify-center gap-4 pt-2">
+            <div class="divider"></div>
+            <Heart class="heart-beat" />
+            <div class="divider"></div>
+          </div>
+        </div>
+      </Transition>
+
       <p
-        class="mb-4 text-sm font-medium uppercase tracking-widest text-white/90 md:text-base"
+        class="text-primary-light mb-4 text-sm font-medium uppercase tracking-widest md:text-base"
       >
         Undangan Pernikahan
       </p>
 
-      <div class="mb-2 flex items-center justify-center gap-4">
-        <div class="divider"></div>
-        <Heart class="heart-beat" />
-        <div class="divider"></div>
-      </div>
+      <Transition name="hero">
+        <div v-if="isOpened">
+          <div class="mb-2 flex items-center justify-center gap-4">
+            <div class="divider"></div>
+            <Heart class="heart-beat" />
+            <div class="divider"></div>
+          </div>
 
-      <div class="mb-4">
-        <h1
-          class="font-heading mr-32 text-6xl font-semibold text-white md:mr-40 md:text-6xl lg:text-7xl"
-        >
-          {{ weddingInfo?.bride_nickname }}
-        </h1>
-        <span class="text-5xl font-light text-white md:text-6xl">&amp;</span>
-        <h1
-          class="font-heading ml-32 text-6xl font-semibold text-white md:ml-40 md:text-6xl lg:text-7xl"
-        >
-          {{ weddingInfo?.groom_nickname }}
-        </h1>
-      </div>
+          <div class="mb-4">
+            <h1
+              class="font-heading text-primary mr-32 text-6xl font-semibold md:mr-40 md:text-6xl lg:text-7xl"
+            >
+              {{ weddingInfo?.bride_nickname }}
+            </h1>
+            <span class="text-primary-light text-3xl font-light md:text-6xl"
+              >&amp;</span
+            >
+            <h1
+              class="font-heading text-primary ml-32 text-6xl font-semibold md:ml-40 md:text-6xl lg:text-7xl"
+            >
+              {{ weddingInfo?.groom_nickname }}
+            </h1>
+          </div>
 
-      <p class="mb-12 text-sm text-white/80 md:text-base">
-        <FormatDate :date="weddingInfo?.wedding_date" :with-day="true" />
-      </p>
+          <p class="text-primary-light mb-12 text-sm md:text-base">
+            <FormatDate :date="weddingInfo?.wedding_date" :with-day="true" />
+          </p>
+        </div>
+      </Transition>
 
       <button
         @click="isOpened ? scrollToEventDetails() : scrollToContent()"
-        class="btn-primary text-lg shadow-2xl hover:shadow-sky-400/50 md:text-xl"
+        class="btn-primary mt-10 text-lg shadow-2xl hover:shadow-sky-400/50 md:text-xl"
       >
         {{ isOpened ? "Lihat Acara" : "Buka Undangan" }}
       </button>
     </div>
 
-    <div class="absolute bottom-8 -translate-x-1/2 animate-bounce">
+    <div
+      v-if="isOpened"
+      class="absolute bottom-8 -translate-x-1/2 animate-bounce"
+    >
       <div
         class="flex h-10 w-6 justify-center rounded-full border-2 border-white/60 pt-2"
       >
@@ -137,5 +162,26 @@ const scrollToContent = async () => {
     transform: scale(0.8);
     color: #f0f9ff;
   }
+}
+
+.cover-leave-active {
+  transition:
+    opacity 0.5s ease-out,
+    transform 0.5s ease-out;
+}
+.cover-leave-to {
+  opacity: 0;
+  transform: translateY(-16px);
+}
+
+.hero-enter-active {
+  transition:
+    opacity 0.6s ease-out,
+    transform 0.6s ease-out;
+  transition-delay: 0.15s;
+}
+.hero-enter-from {
+  opacity: 0;
+  transform: translateY(16px);
 }
 </style>

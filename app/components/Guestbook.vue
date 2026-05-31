@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { MessageSquare, Send, X, Heart, User } from "lucide-vue-next";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Autoplay } from "swiper/modules";
@@ -7,6 +7,11 @@ import "swiper/css";
 import type { SwiperSlideProps } from "swiper/react";
 import FormatDate from "~/utils/FormatDate.vue";
 import type { Wish } from "~/types";
+
+const props = defineProps<{
+  guestId?: string | null;
+  guestName?: string;
+}>();
 
 const emit = defineEmits<{
   wishAdded: [name: string, message: string];
@@ -21,6 +26,13 @@ const selectedWish = ref<Wish | null>(null);
 const isModalOpen = ref(false);
 const showSuccessPopup = ref(false);
 const successPopupData = ref({ name: "", message: "" });
+
+watch(
+  () => props.guestName,
+  (val) => {
+    if (val) wishName.value = val;
+  },
+);
 
 const canSubmit = computed(() => wishName.value && newWish.value);
 
@@ -127,7 +139,7 @@ onUnmounted(() => {
 });
 
 const newWish = ref("");
-const wishName = ref("");
+const wishName = ref(props.guestName ?? "");
 const isSubmitting = ref(false);
 
 const addWish = async () => {
@@ -172,7 +184,7 @@ const addWish = async () => {
     }
 
     newWish.value = "";
-    wishName.value = "";
+    if (!props.guestName) wishName.value = "";
     emit(
       "wishAdded",
       data?.name || wishName.value,
@@ -201,15 +213,15 @@ const closeSuccessPopup = () => {
 
 <template>
   <section class="section relative overflow-hidden">
-    <div class="absolute inset-0 pointer-events-none">
+    <div class="pointer-events-none absolute inset-0">
       <div
-        class="absolute left-10 top-20 h-32 w-32 rounded-full bg-white/30 blur-3xl transform-gpu"
+        class="absolute left-10 top-20 h-32 w-32 transform-gpu rounded-full bg-white/30 blur-3xl"
       ></div>
       <div
-        class="absolute bottom-16 right-12 h-40 w-40 rounded-full bg-white/30 blur-3xl transform-gpu"
+        class="absolute bottom-16 right-12 h-40 w-40 transform-gpu rounded-full bg-white/30 blur-3xl"
       ></div>
       <div
-        class="absolute left-1/2 top-1/4 h-24 w-24 rounded-full bg-white/30 blur-2xl transform-gpu"
+        class="absolute left-1/2 top-1/4 h-24 w-24 transform-gpu rounded-full bg-white/30 blur-2xl"
       ></div>
     </div>
     <div class="container-custom relative z-10">
@@ -234,6 +246,8 @@ const closeSuccessPopup = () => {
             type="text"
             class="input-field"
             placeholder="Nama Anda"
+            :readonly="!!props.guestName"
+            :class="{ 'cursor-not-allowed opacity-70': !!props.guestName }"
             required
           />
           <div class="relative">
@@ -297,7 +311,7 @@ const closeSuccessPopup = () => {
               <div
                 class="bg-muted-light flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full"
               >
-                <MessageSquare class="text-muted h-5 w-5" />
+                <MessageSquare class="text-primary h-5 w-5" />
               </div>
               <div class="flex-1 overflow-hidden">
                 <div class="mb-1 flex items-center justify-between">
@@ -356,33 +370,41 @@ const closeSuccessPopup = () => {
       <Teleport to="body">
         <div
           v-if="isModalOpen"
-          class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 transition-all duration-300"
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-md transition-all duration-300"
           @click.self="closeModal"
         >
-          <div class="card relative w-full max-w-lg rounded-3xl bg-white/95 p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-300 border border-white">
+          <div
+            class="card animate-in fade-in zoom-in-95 relative w-full max-w-lg rounded-3xl border border-white bg-white/95 p-8 shadow-2xl duration-300"
+          >
             <button
-              class="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full text-gray-400 bg-gray-50 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+              class="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
               @click="closeModal"
             >
               <X class="h-5 w-5" />
             </button>
             <div class="flex items-start gap-5">
               <div
-                class="bg-gradient-to-br from-primary-light to-primary flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full shadow-md text-white"
+                class="from-primary-light to-primary flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-white shadow-md"
               >
-                <MessageSquare class="h-8 w-8" />
+                <User class="text-primary h-8 w-8" />
               </div>
               <div class="flex-1 pt-1">
-                <h3 class="text-primary-dark font-heading mb-1 text-2xl font-bold">
+                <h3
+                  class="text-primary-dark font-heading mb-1 text-2xl font-bold"
+                >
                   {{ selectedWish?.name }}
                 </h3>
                 <FormatDate
                   :date="String(selectedWish?.created_at)"
                   :with-day="true"
-                  class="text-gray-400 block mb-4 text-sm font-medium"
+                  class="mb-4 block text-sm font-medium text-gray-400"
                 />
-                <div class="bg-sky-50/50 p-4 rounded-2xl border border-sky-100/50">
-                  <p class="text-gray-700 whitespace-pre-wrap leading-relaxed font-serif italic">
+                <div
+                  class="rounded-2xl border border-sky-100/50 bg-sky-50/50 p-4"
+                >
+                  <p
+                    class="whitespace-pre-wrap font-serif italic leading-relaxed text-gray-700"
+                  >
                     "{{ selectedWish?.message }}"
                   </p>
                 </div>
@@ -395,32 +417,35 @@ const closeSuccessPopup = () => {
       <Teleport to="body">
         <div
           v-if="showSuccessPopup"
-          class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 transition-all duration-300"
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-md transition-all duration-300"
           @click.self="closeSuccessPopup"
         >
           <div
-            class="card relative w-full max-w-lg rounded-3xl bg-white/95 p-8 text-center shadow-2xl animate-in fade-in zoom-in-95 duration-300 border border-white"
+            class="card animate-in fade-in zoom-in-95 relative w-full max-w-lg rounded-3xl border border-white bg-white/95 p-8 text-center shadow-2xl duration-300"
           >
             <div
-              class="bg-gradient-to-br from-pink-400 to-rose-400 mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full shadow-lg"
+              class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-pink-400 to-rose-400 shadow-lg"
             >
               <Heart class="h-10 w-10 fill-white text-white" />
             </div>
             <h3 class="font-heading text-primary-dark mb-3 text-2xl font-bold">
               Terima Kasih!
             </h3>
-            <p class="text-gray-600 mb-6 leading-relaxed">
+            <p class="mb-6 leading-relaxed text-gray-600">
               Ucapan dan Doa Anda telah kami terima.
             </p>
             <div
-              class="bg-rose-50 border border-rose-100 text-rose-800 mb-6 rounded-2xl p-5 text-center shadow-sm"
+              class="mb-6 rounded-2xl border border-rose-100 bg-rose-50 p-5 text-center text-rose-800 shadow-sm"
             >
-              <p class="font-medium mb-2">{{ successPopupData.name }}</p>
-              <p class="line-clamp-3 text-sm italic font-serif opacity-80">
+              <p class="mb-2 font-medium">{{ successPopupData.name }}</p>
+              <p class="line-clamp-3 font-serif text-sm italic opacity-80">
                 "{{ successPopupData.message }}"
               </p>
             </div>
-            <button @click="closeSuccessPopup" class="absolute right-4 top-4 rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
+            <button
+              @click="closeSuccessPopup"
+              class="absolute right-4 top-4 rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            >
               <X class="h-5 w-5" />
             </button>
           </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import { Send, X, User, Heart } from "lucide-vue-next";
 import type { WeddingInfo } from "~/types";
 import FormatDate from "~/utils/FormatDate.vue";
@@ -9,12 +9,14 @@ const props = defineProps<{
     scrollToLatest: () => void;
     startAutoScroll: () => void;
   } | null;
+  guestId?: string | null;
+  guestName?: string;
 }>();
 
 const supabase = useSupabase();
 
 const weddingInfo = useState<WeddingInfo>("weddingInfo");
-const name = ref("");
+const name = ref(props.guestName ?? "");
 const attendance = ref<"hadir" | "tidak" | "">("");
 const numGuests = ref(1);
 const isSubmitted = ref(false);
@@ -42,6 +44,10 @@ const canSubmit = computed(
 
 const showGuestDetails = computed(() => {
   return attendance.value === "hadir";
+});
+
+watch(() => props.guestName, (val) => {
+  if (val) name.value = val;
 });
 
 watch(numGuests, (newVal) => {
@@ -131,7 +137,7 @@ const closePopup = () => {
 };
 
 const resetForm = () => {
-  name.value = "";
+  if (!props.guestName) name.value = "";
   attendance.value = "";
   numGuests.value = 1;
   isSubmitted.value = false;
@@ -179,6 +185,8 @@ const resetForm = () => {
               type="text"
               class="input-field border-primary border-2"
               placeholder="Masukkan nama Anda"
+              :readonly="!!props.guestName"
+              :class="{ 'cursor-not-allowed opacity-70': !!props.guestName }"
               required
             />
           </div>
@@ -306,7 +314,7 @@ const resetForm = () => {
           <div
             class="from-primary to-primary-light mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br shadow-lg"
           >
-            <Heart class="h-10 w-10 text-white" />
+            <Heart class="text-primary h-10 w-10" />
           </div>
           <h3 class="font-heading text-primary-dark mb-3 text-2xl font-bold">
             Terima Kasih!

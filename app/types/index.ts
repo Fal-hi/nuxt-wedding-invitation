@@ -79,3 +79,17 @@ export interface Bank {
   name: string;
   color: string;
 }
+
+export type GuestType = "male" | "female" | "family";
+
+export interface Guest {
+  id: string;
+  name: string;
+  slug: string;
+  guest_type: GuestType;
+  phone?: string | null;
+  attendance_status?: string | null;
+  invitation_sent?: boolean;
+  sent_at?: string | null;
+  created_at: string;
+}

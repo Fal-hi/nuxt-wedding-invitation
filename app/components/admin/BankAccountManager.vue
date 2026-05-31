@@ -54,7 +54,7 @@ const addAccount = async () => {
       ? Math.max(...accounts.value.map((a) => a.sort_order || 0)) + 1
       : 1;
 
-  const { error } = await supabase.from("bank").insert({
+  const { error } = await supabase.from("bank_accounts").insert({
     bank_name: newBankName.value,
     account_number: newAccountNumber.value,
     account_holder: newAccountHolder.value,

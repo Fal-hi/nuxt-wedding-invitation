@@ -1,4 +1,8 @@
 <script setup lang="ts">
+definePageMeta({
+  middleware: "guest",
+});
+
 import { ref, onMounted } from "vue";
 import { Heart } from "lucide-vue-next";
 import AOS from "aos";
@@ -14,6 +18,9 @@ import Guestbook from "~/components/Guestbook.vue";
 import CloudParallax from "~/components/CloudParallax.vue";
 import MusicPlayer from "~/components/MusicPlayer.vue";
 
+const route = useRoute();
+const { guest, guestName, guestTitle, loadGuest } = useGuest();
+
 const showContent = ref(false);
 const galleryRef = ref<any>(null);
 const guestbookRef = ref<any>(null);
@@ -25,6 +32,9 @@ const isAppLoading = ref(true);
 const supabase = useSupabase();
 
 onMounted(async () => {
+  const slug = route.params.guest as string;
+  await loadGuest(slug);
+
   AOS.init({
     duration: 800,
     once: true,
@@ -135,7 +145,8 @@ const handleOpenInvitation = () => {
 
     <HeroSection
       :is-opened="showContent"
-      guest-name="Tamu Undangan"
+      :guest-name="guestName"
+      :guest-title="guestTitle"
       @open-invitation="handleOpenInvitation"
     />
 
@@ -145,9 +156,17 @@ const handleOpenInvitation = () => {
         <CoupleProfile />
         <Gallery ref="galleryRef" />
         <EventDetails id="event-details" />
-        <RSVPForm :guestbook-ref="guestbookRef" />
+        <RSVPForm
+          :guestbook-ref="guestbookRef"
+          :guest-name="guestName"
+          :guest-id="guest?.id"
+        />
         <GiftSection />
-        <Guestbook ref="guestbookRef" />
+        <Guestbook
+          ref="guestbookRef"
+          :guest-name="guestName"
+          :guest-id="guest?.id"
+        />
 
         <footer class="section relative overflow-hidden text-center">
           <div class="pointer-events-none absolute inset-0">
