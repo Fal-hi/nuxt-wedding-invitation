@@ -21,9 +21,9 @@ const scrollToEventDetails = async () => {
   emit("openInvitation");
   await nextTick();
   await new Promise((resolve) => setTimeout(resolve, 100));
-  const eventDetails = document.getElementById("event-details");
-  if (eventDetails) {
-    eventDetails.scrollIntoView({ behavior: "smooth" });
+  const content = document.getElementById("content");
+  if (content) {
+    content.scrollIntoView({ behavior: "smooth" });
   }
 };
 
@@ -63,7 +63,7 @@ const scrollToContent = async () => {
             Kepada Yth. {{ guestTitle }}
           </p>
           <p
-            class="font-heading text-primary my-6 text-5xl font-semibold md:text-4xl lg:text-5xl"
+            class="font-heading my-6 text-5xl font-semibold text-[var(--color-primary)] md:text-4xl md:text-white lg:text-5xl"
           >
             {{ guestName }}
           </p>
@@ -91,15 +91,16 @@ const scrollToContent = async () => {
 
           <div class="mb-4">
             <h1
-              class="font-heading text-primary mr-32 text-6xl font-semibold md:mr-40 md:text-6xl lg:text-7xl"
+              class="font-heading mr-32 text-6xl font-semibold text-[var(--color-primary)] md:text-white"
             >
               {{ weddingInfo?.bride_nickname }}
             </h1>
-            <span class="text-primary-light text-3xl font-light md:text-6xl"
+            <span
+              class="text-3xl font-light text-[var(--color-primary)] md:text-white/80"
               >&amp;</span
             >
             <h1
-              class="font-heading text-primary ml-32 text-6xl font-semibold md:ml-40 md:text-6xl lg:text-7xl"
+              class="font-heading ml-32 text-6xl font-semibold text-[var(--color-primary)] md:ml-40 md:text-white"
             >
               {{ weddingInfo?.groom_nickname }}
             </h1>

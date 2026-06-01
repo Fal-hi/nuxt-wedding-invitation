@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
-import { Send, X, User, Heart } from "lucide-vue-next";
-import type { WeddingInfo } from "~/types";
+import { Send, X, Heart, User, CheckCircle } from "lucide-vue-next";
+import type { WeddingInfo, RSVP } from "~/types";
 import FormatDate from "~/utils/FormatDate.vue";
 
 const props = defineProps<{
@@ -17,60 +17,131 @@ const supabase = useSupabase();
 
 const weddingInfo = useState<WeddingInfo>("weddingInfo");
 const name = ref(props.guestName ?? "");
-const attendance = ref<"hadir" | "tidak" | "">("");
-const numGuests = ref(1);
+const attendance = ref<"hadir" | "tidak_hadir" | "">("");
+const selectedGuestCount = ref<"1" | "2" | "3" | "4" | "more">("1");
+const customGuestCount = ref<number>(5);
 const isSubmitted = ref(false);
 const isLoading = ref(false);
 const showPopup = ref(false);
-const showConfirmNotComing = ref(false);
-const additionalGuestNames = ref<string[]>([]);
-const reason = ref("");
 
-const canSelectAttendance = computed(() => name.value.trim().length > 0);
-
-const additionalGuestsCount = computed(() => numGuests.value - 1);
-
-const allGuestNamesFilled = computed(() => {
-  if (numGuests.value === 1) return true;
-  return additionalGuestNames.value.every((n) => n.trim().length > 0);
-});
-
-const canSubmit = computed(
-  () =>
-    name.value.trim().length > 0 &&
-    attendance.value !== "" &&
-    allGuestNamesFilled.value,
-);
-
-const showGuestDetails = computed(() => {
-  return attendance.value === "hadir";
-});
+const existingRsvp = ref<RSVP | null>(null);
+const isEditingRsvp = ref(false);
+const isLoadingCheck = ref(true);
 
 watch(() => props.guestName, (val) => {
   if (val) name.value = val;
 });
 
-watch(numGuests, (newVal) => {
-  additionalGuestNames.value = Array(newVal - 1).fill("");
-});
+const loadExistingRsvp = async (guestId: string) => {
+  isLoadingCheck.value = true;
 
-const updateAdditionalGuestName = (index: number, value: string) => {
-  additionalGuestNames.value[index] = value;
+  let { data, error } = await supabase
+    .from("rsvps")
+    .select("*")
+    .eq("guest_id", guestId)
+    .maybeSingle();
+
+  if (!data && props.guestName) {
+    const { data: nameData, error: nameError } = await supabase
+      .from("rsvps")
+      .select("*")
+      .eq("name", props.guestName)
+      .maybeSingle();
+
+    if (nameData && !nameError) {
+      data = nameData;
+      error = nameError;
+      await supabase.from("rsvps").update({ guest_id: guestId }).eq("id", data.id);
+    }
+  }
+
+  if (data && !error) {
+    existingRsvp.value = data as RSVP;
+    attendance.value = data.attendance as "hadir" | "tidak_hadir";
+    if (data.num_guests >= 1 && data.num_guests <= 4) {
+      selectedGuestCount.value = String(data.num_guests) as "1" | "2" | "3" | "4";
+    } else if (data.num_guests > 4) {
+      selectedGuestCount.value = "more";
+      customGuestCount.value = data.num_guests;
+    }
+  }
+  isLoadingCheck.value = false;
 };
 
-const confirmNotComing = async () => {
-  attendance.value = "tidak";
-  numGuests.value = 1;
-  additionalGuestNames.value = [];
+watch(() => props.guestId, (val) => {
+  if (val) loadExistingRsvp(val);
+});
+
+onMounted(() => {
+  if (props.guestId) loadExistingRsvp(props.guestId);
+  else isLoadingCheck.value = false;
+});
+
+const canSelectAttendance = computed(() => name.value.trim().length > 0);
+
+const showGuestCount = computed(() => attendance.value === "hadir");
+
+const showCustomCount = computed(
+  () => attendance.value === "hadir" && selectedGuestCount.value === "more",
+);
+
+const finalGuestCount = computed(() => {
+  if (attendance.value !== "hadir") return 0;
+  if (selectedGuestCount.value === "more") {
+    return Math.max(5, Math.min(100, customGuestCount.value));
+  }
+  return parseInt(selectedGuestCount.value);
+});
+
+const customCountValid = computed(
+  () =>
+    !showCustomCount.value ||
+    (customGuestCount.value >= 5 && customGuestCount.value <= 100),
+);
+
+const canSubmit = computed(
+  () =>
+    name.value.trim().length > 0 &&
+    attendance.value !== "" &&
+    (attendance.value !== "hadir" ||
+      (showCustomCount.value ? customCountValid.value : true)),
+);
+
+const showForm = computed(
+  () => isLoadingCheck.value || !existingRsvp.value || isEditingRsvp.value,
+);
+
+const startEdit = () => {
+  isEditingRsvp.value = true;
+};
+
+const handleSubmit = async () => {
+  if (!canSubmit.value) return;
 
   isLoading.value = true;
-  const { error } = await supabase.from("rsvps").insert({
+
+  const payload = {
     name: name.value,
-    attendance: "tidak",
-    num_guests: 1,
-    additional_guest_names: [],
-    reason: reason.value,
-  });
+    attendance: attendance.value,
+    num_guests: finalGuestCount.value,
+    additional_guest_names: null,
+    guest_id: props.guestId || null,
+  };
+
+  let result;
+
+  if (existingRsvp.value) {
+    result = await supabase
+      .from("rsvps")
+      .update(payload)
+      .eq("id", existingRsvp.value.id)
+      .select()
+      .single();
+  } else {
+    result = await supabase.from("rsvps").insert(payload).select().single();
+  }
+
+  const { data, error } = result;
   isLoading.value = false;
 
   if (error) {
@@ -79,7 +150,11 @@ const confirmNotComing = async () => {
     return;
   }
 
-  showConfirmNotComing.value = false;
+  if (data) {
+    existingRsvp.value = data as RSVP;
+    isEditingRsvp.value = false;
+  }
+
   isSubmitted.value = true;
   showPopup.value = true;
 
@@ -91,57 +166,16 @@ const confirmNotComing = async () => {
   }, 1500);
 };
 
-const handleNotComingClick = () => {
-  if (canSelectAttendance.value && attendance.value !== "tidak") {
-    showConfirmNotComing.value = true;
-  }
-};
-
-const cancelNotComing = () => {
-  showConfirmNotComing.value = false;
-};
-
-const handleSubmit = async () => {
-  if (canSubmit.value) {
-    isLoading.value = true;
-    const { error } = await supabase.from("rsvps").insert({
-      name: name.value,
-      attendance: attendance.value,
-      num_guests: numGuests.value,
-      additional_guest_names: additionalGuestNames.value.filter((n) =>
-        n.trim(),
-      ),
-      reason: reason.value,
-    });
-    isLoading.value = false;
-
-    if (error) {
-      console.error("Error submitting RSVP:", error);
-      alert("Terjadi kesalahan saat mengirim data. Silakan coba lagi.");
-      return;
-    }
-
-    isSubmitted.value = true;
-    showPopup.value = true;
-    setTimeout(() => {
-      if (props.guestbookRef) {
-        props.guestbookRef.scrollToLatest();
-        props.guestbookRef.startAutoScroll();
-      }
-    }, 1500);
-  }
-};
-
 const closePopup = () => {
   showPopup.value = false;
 };
 
-const resetForm = () => {
-  if (!props.guestName) name.value = "";
-  attendance.value = "";
-  numGuests.value = 1;
-  isSubmitted.value = false;
-};
+const guestCountLabel = computed(() => {
+  if (!existingRsvp.value) return "";
+  const n = existingRsvp.value.num_guests;
+  if (n === 0) return "";
+  return `${n} Orang`;
+});
 </script>
 
 <template>
@@ -169,8 +203,47 @@ const resetForm = () => {
         </p>
       </div>
 
+      <div v-if="isLoadingCheck" class="mx-auto max-w-lg text-center">
+        <div class="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+      </div>
+
       <div
-        v-if="!isSubmitted"
+        v-else-if="existingRsvp && !isEditingRsvp"
+        class="mx-auto max-w-lg"
+        data-aos="fade-up"
+      >
+        <div class="rounded-2xl border border-sky-200 bg-sky-50/80 p-6 text-center shadow-sm">
+          <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-sky-100">
+            <CheckCircle class="h-7 w-7 text-sky-600" />
+          </div>
+          <h3 class="font-heading mb-4 text-lg font-semibold text-sky-800">
+            Konfirmasi Kehadiran Sudah Terkirim
+          </h3>
+          <div class="space-y-2 text-sm text-sky-700">
+            <p><span class="font-medium">Nama:</span> {{ existingRsvp.name }}</p>
+            <p>
+              <span class="font-medium">Status:</span>
+              {{ existingRsvp.attendance === "hadir" ? "Hadir" : "Tidak Hadir" }}
+            </p>
+            <p v-if="existingRsvp.attendance === 'hadir'">
+              <span class="font-medium">Jumlah Tamu:</span>
+              {{ guestCountLabel }}
+            </p>
+          </div>
+          <p class="mt-3 text-xs text-sky-600">
+            Jika ada perubahan rencana, Anda dapat mengirim ulang konfirmasi.
+          </p>
+          <button
+            @click="startEdit"
+            class="mt-3 rounded-full border-2 border-sky-300 bg-white px-6 py-2 text-sm font-medium text-sky-700 transition-colors hover:bg-sky-50"
+          >
+            Kirim Konfirmasi Lain
+          </button>
+        </div>
+      </div>
+
+      <div
+        v-else
         class="mx-auto max-w-lg"
         data-aos="fade-up"
         data-aos-delay="200"
@@ -189,6 +262,10 @@ const resetForm = () => {
               :class="{ 'cursor-not-allowed opacity-70': !!props.guestName }"
               required
             />
+            <p v-if="props.guestName" class="text-primary mt-1.5 text-xs">
+              <User class="mr-1 inline h-3 w-3" />
+              Nama di bawah ini merupakan perwakilan tamu yang menerima undangan.
+            </p>
           </div>
 
           <div>
@@ -199,13 +276,13 @@ const resetForm = () => {
               <button
                 type="button"
                 @click="canSelectAttendance && (attendance = 'hadir')"
-                class="border-primary flex items-center justify-center gap-2 rounded-xl border-2 px-4 py-3 transition-all duration-200"
+                class="flex items-center justify-center gap-2 rounded-xl border-2 px-4 py-3 transition-all duration-200"
                 :class="
                   attendance === 'hadir'
-                    ? 'bg-primary text-white'
+                    ? 'bg-primary border-primary text-white'
                     : canSelectAttendance
-                      ? 'bg-primary hover:bg-primary text-white'
-                      : 'bg-bg-alt text-primary cursor-not-allowed opacity-50'
+                      ? 'border-primary text-primary hover:bg-primary hover:text-white'
+                      : 'border-primary text-primary cursor-not-allowed opacity-50'
                 "
                 :disabled="!canSelectAttendance"
               >
@@ -214,19 +291,19 @@ const resetForm = () => {
               </button>
               <button
                 type="button"
-                @click="handleNotComingClick"
-                class="border-primary flex items-center justify-center gap-2 rounded-xl border-2 px-4 py-3 transition-all duration-200"
+                @click="canSelectAttendance && (attendance = 'tidak_hadir')"
+                class="flex items-center justify-center gap-2 rounded-xl border-2 px-4 py-3 transition-all duration-200"
                 :class="
-                  attendance === 'tidak'
-                    ? 'border-primary text-white'
+                  attendance === 'tidak_hadir'
+                    ? 'bg-primary border-primary text-white'
                     : canSelectAttendance
-                      ? 'border-primary text-primary hover:border-primary'
+                      ? 'border-primary text-primary hover:bg-primary hover:text-white'
                       : 'border-primary text-primary cursor-not-allowed opacity-50'
                 "
                 :disabled="!canSelectAttendance"
               >
                 <X class="h-5 w-5" />
-                Tidak
+                Tidak Hadir
               </button>
             </div>
             <p v-if="!canSelectAttendance" class="text-primary mt-2 text-xs">
@@ -235,36 +312,36 @@ const resetForm = () => {
             </p>
           </div>
 
-          <div v-if="attendance === 'hadir'">
+          <div v-if="showGuestCount">
             <label class="text-primary mb-2 block text-sm font-medium">
-              Jumlah Tamu
+              Jumlah Tamu yang Hadir
             </label>
-            <select v-model="numGuests" class="input-field">
-              <option :value="1">1 Orang</option>
-              <option :value="2">2 Orang</option>
-              <option :value="3">3 Orang</option>
-              <option :value="4">4 Orang</option>
+            <select v-model="selectedGuestCount" class="input-field">
+              <option value="1">1 Orang</option>
+              <option value="2">2 Orang</option>
+              <option value="3">3 Orang</option>
+              <option value="4">4 Orang</option>
+              <option value="more">Lebih dari 4 Orang</option>
             </select>
           </div>
 
-          <div v-if="additionalGuestsCount > 0" class="space-y-4">
+          <div v-if="showCustomCount">
             <label class="text-primary mb-2 block text-sm font-medium">
-              Nama Tamu Lainnya
+              Jumlah Tamu yang Akan Hadir
             </label>
             <input
-              v-for="(guest, index) in additionalGuestsCount"
-              :key="index"
-              :value="additionalGuestNames[index]"
-              @input="
-                updateAdditionalGuestName(
-                  index,
-                  ($event.target as HTMLInputElement).value,
-                )
-              "
-              type="text"
+              v-model.number="customGuestCount"
+              type="number"
+              min="5"
+              max="100"
               class="input-field"
-              :placeholder="`Nama Tamu ${index + 2}`"
             />
+            <p
+              v-if="customGuestCount < 5 || customGuestCount > 100"
+              class="mt-1 text-xs text-red-500"
+            >
+              Minimal 5, maksimal 100 orang
+            </p>
           </div>
 
           <button
@@ -284,23 +361,6 @@ const resetForm = () => {
           </button>
         </form>
       </div>
-
-      <div v-else class="mx-auto max-w-lg text-center" data-aos="fade-up">
-        <div class="card bg-bg border-bg-alt border-2">
-          <div
-            class="bg-primary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
-          >
-            <Heart class="h-8 w-8 text-white" />
-          </div>
-          <h3 class="font-heading text-primary mb-2 text-xl">Terima Kasih!</h3>
-          <p class="text-text-muted mb-4">
-            Konfirmasi kehadiran Anda telah kami terima.
-          </p>
-          <button @click="resetForm" class="btn-primary">
-            Kirim Konfirmasi Lain
-          </button>
-        </div>
-      </div>
     </div>
     <Teleport to="body">
       <div
@@ -314,7 +374,7 @@ const resetForm = () => {
           <div
             class="from-primary to-primary-light mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br shadow-lg"
           >
-            <Heart class="text-primary h-10 w-10" />
+            <Heart class="h-10 w-10 text-white" />
           </div>
           <h3 class="font-heading text-primary-dark mb-3 text-2xl font-bold">
             Terima Kasih!
@@ -333,59 +393,6 @@ const resetForm = () => {
           >
             <X class="h-5 w-5" />
           </button>
-        </div>
-      </div>
-    </Teleport>
-
-    <Teleport to="body">
-      <div
-        v-if="showConfirmNotComing"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-md transition-all duration-300"
-        @click.self="cancelNotComing"
-      >
-        <div
-          class="card animate-in fade-in zoom-in-95 relative w-full max-w-lg rounded-3xl border border-white bg-white/95 p-8 text-center shadow-2xl duration-300"
-        >
-          <div
-            class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-gray-200 to-gray-300 shadow-md"
-          >
-            <X class="h-10 w-10 text-gray-500" />
-          </div>
-          <h3 class="font-heading mb-3 text-2xl font-bold text-gray-800">
-            Konfirmasi
-          </h3>
-          <p class="mb-6 text-sm leading-relaxed text-gray-600">
-            Apakah Anda yakin tidak dapat menghadiri acara pernikahan kami?<br />
-            Mohon berikan alasan Anda tidak dapat menghadiri pernikahan kami.
-          </p>
-          <textarea
-            v-model="reason"
-            class="input-field mb-6 min-h-32 resize-none border-gray-200 bg-gray-50 focus:bg-white"
-            placeholder="Masukkan alasan Anda..."
-            autofocus
-          ></textarea>
-          <div class="flex flex-col gap-3 sm:flex-row">
-            <button
-              type="button"
-              @click="cancelNotComing"
-              class="w-full rounded-full border-2 border-gray-200 bg-white px-6 py-3 font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 sm:w-1/2"
-              :disabled="isLoading"
-            >
-              Batal
-            </button>
-            <button
-              type="button"
-              @click="confirmNotComing"
-              class="btn-primary flex w-full items-center justify-center gap-2 py-3 sm:w-1/2"
-              :disabled="isLoading"
-            >
-              <span
-                v-if="isLoading"
-                class="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"
-              ></span>
-              {{ isLoading ? "Menyimpan..." : "Kirim Konfirmasi" }}
-            </button>
-          </div>
         </div>
       </div>
     </Teleport>

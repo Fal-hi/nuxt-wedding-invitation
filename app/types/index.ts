@@ -56,6 +56,18 @@ export interface Wish {
   name: string;
   message: string;
   created_at: string;
+  guest_id?: string | null;
+}
+
+export interface RSVP {
+  id: string;
+  name: string;
+  attendance: string;
+  num_guests: number;
+  additional_guest_names: string[] | null;
+  reason: string | null;
+  created_at: string;
+  guest_id?: string | null;
 }
 
 export interface TimeLeft {

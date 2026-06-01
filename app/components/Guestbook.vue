@@ -1,6 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from "vue";
-import { MessageSquare, Send, X, Heart, User } from "lucide-vue-next";
+import { ref, computed, onMounted, onUnmounted } from "vue";
+import {
+  MessageSquare,
+  Send,
+  X,
+  Heart,
+  User,
+  CheckCircle,
+  Edit3,
+} from "lucide-vue-next";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Autoplay } from "swiper/modules";
 import "swiper/css";
@@ -27,6 +35,18 @@ const isModalOpen = ref(false);
 const showSuccessPopup = ref(false);
 const successPopupData = ref({ name: "", message: "" });
 
+const wishes = ref<Wish[]>([]);
+const isLoadingInitial = ref(true);
+let realtimeChannel: any = null;
+
+const existingWish = ref<Wish | null>(null);
+const isEditingWish = ref(false);
+const isLoadingWishCheck = ref(true);
+
+const newWish = ref("");
+const wishName = ref(props.guestName ?? "");
+const isSubmitting = ref(false);
+
 watch(
   () => props.guestName,
   (val) => {
@@ -35,6 +55,10 @@ watch(
 );
 
 const canSubmit = computed(() => wishName.value && newWish.value);
+
+const showForm = computed(
+  () => isLoadingWishCheck.value || !existingWish.value || isEditingWish.value,
+);
 
 const onSwiper = (swiper: any) => {
   swiperInstance.value = swiper;
@@ -77,10 +101,6 @@ const handleKeydown = (e: KeyboardEvent) => {
   }
 };
 
-const wishes = ref<Wish[]>([]);
-const isLoadingInitial = ref(true);
-let realtimeChannel: any = null;
-
 const fetchWishes = async () => {
   isLoadingInitial.value = true;
   const { data, error } = await supabase
@@ -101,6 +121,47 @@ const fetchWishes = async () => {
   isLoadingInitial.value = false;
 };
 
+const fetchExistingWish = async (guestId: string) => {
+  isLoadingWishCheck.value = true;
+
+  let { data, error } = await supabase
+    .from("wishes")
+    .select("*")
+    .eq("guest_id", guestId)
+    .maybeSingle();
+
+  if (!data && props.guestName) {
+    const { data: nameData, error: nameError } = await supabase
+      .from("wishes")
+      .select("*")
+      .eq("name", props.guestName)
+      .maybeSingle();
+
+    if (nameData && !nameError) {
+      data = nameData;
+      error = nameError;
+      await supabase
+        .from("wishes")
+        .update({ guest_id: guestId })
+        .eq("id", data.id);
+    }
+  }
+
+  if (data && !error) {
+    existingWish.value = data as Wish;
+    wishName.value = data.name;
+    newWish.value = data.message;
+  }
+  isLoadingWishCheck.value = false;
+};
+
+watch(
+  () => props.guestId,
+  (val) => {
+    if (val) fetchExistingWish(val);
+  },
+);
+
 const subscribeToWishes = () => {
   realtimeChannel = supabase
     .channel("wishes-realtime")
@@ -112,14 +173,14 @@ const subscribeToWishes = () => {
         table: "wishes",
       },
       (payload: any) => {
-        const newWish = payload.new;
-        const exists = wishes.value.some((w) => w.id === newWish.id);
+        const newWishEntry = payload.new;
+        const exists = wishes.value.some((w) => w.id === newWishEntry.id);
         if (!exists) {
           wishes.value.unshift({
-            id: newWish.id,
-            name: newWish.name,
-            message: newWish.message,
-            created_at: newWish.created_at,
+            id: newWishEntry.id,
+            name: newWishEntry.name,
+            message: newWishEntry.message,
+            created_at: newWishEntry.created_at,
           });
         }
       },
@@ -127,8 +188,10 @@ const subscribeToWishes = () => {
     .subscribe();
 };
 
-onMounted(() => {
-  fetchWishes();
+onMounted(async () => {
+  await fetchWishes();
+  if (props.guestId) await fetchExistingWish(props.guestId);
+  else isLoadingWishCheck.value = false;
   subscribeToWishes();
 });
 
@@ -138,59 +201,73 @@ onUnmounted(() => {
   }
 });
 
-const newWish = ref("");
-const wishName = ref(props.guestName ?? "");
-const isSubmitting = ref(false);
+const startEdit = () => {
+  isEditingWish.value = true;
+};
 
 const addWish = async () => {
-  if (wishName.value && newWish.value) {
-    isSubmitting.value = true;
+  if (!wishName.value || !newWish.value) return;
 
-    const { data, error } = await supabase
+  isSubmitting.value = true;
+
+  const payload = {
+    name: wishName.value,
+    message: newWish.value,
+    guest_id: props.guestId || null,
+  };
+
+  let result;
+
+  if (existingWish.value) {
+    result = await supabase
       .from("wishes")
-      .insert({
-        name: wishName.value,
-        message: newWish.value,
-      })
+      .update(payload)
+      .eq("id", existingWish.value.id)
       .select()
       .single();
-
-    isSubmitting.value = false;
-
-    if (error) {
-      console.error("Error submitting wish:", error);
-      alert("Gagal mengirim ucapan. Silakan coba lagi.");
-      return;
-    }
-
-    if (data) {
-      const newEntry = {
-        id: data.id,
-        name: data.name,
-        message: data.message,
-        created_at: data.created_at,
-      };
-
-      const exists = wishes.value.some((w) => w.id === newEntry.id);
-      if (!exists) {
-        wishes.value.unshift(newEntry);
-      }
-
-      successPopupData.value = {
-        name: data.name,
-        message: data.message,
-      };
-      showSuccessPopup.value = true;
-    }
-
-    newWish.value = "";
-    if (!props.guestName) wishName.value = "";
-    emit(
-      "wishAdded",
-      data?.name || wishName.value,
-      data?.message || newWish.value,
-    );
+  } else {
+    result = await supabase.from("wishes").insert(payload).select().single();
   }
+
+  const { data, error } = result;
+  isSubmitting.value = false;
+
+  if (error) {
+    console.error("Error submitting wish:", error);
+    alert("Gagal mengirim ucapan. Silakan coba lagi.");
+    return;
+  }
+
+  if (data) {
+    existingWish.value = data as Wish;
+    isEditingWish.value = false;
+
+    const newEntry = {
+      id: data.id,
+      name: data.name,
+      message: data.message,
+      created_at: data.created_at,
+    };
+
+    const exists = wishes.value.some((w) => w.id === newEntry.id);
+    if (!exists) {
+      wishes.value.unshift(newEntry);
+    }
+
+    successPopupData.value = {
+      name: data.name,
+      message: data.message,
+    };
+    showSuccessPopup.value = true;
+  }
+
+  newWish.value = "";
+  if (!props.guestName) wishName.value = "";
+  emit(
+    "wishAdded",
+    data?.name || wishName.value,
+    data?.message || newWish.value,
+  );
 };
 
 const showSwiper = computed(() => wishes.value.length > 0);
@@ -236,6 +313,40 @@ const closeSuccessPopup = () => {
       </div>
 
       <div
+        v-if="!isLoadingWishCheck && existingWish && !isEditingWish"
+        class="mx-auto mb-12 max-w-lg"
+        data-aos="fade-up"
+      >
+        <div
+          class="rounded-2xl border border-sky-200 bg-sky-50/80 p-6 text-center shadow-sm"
+        >
+          <div
+            class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-sky-100"
+          >
+            <CheckCircle class="h-7 w-7 text-sky-600" />
+          </div>
+          <h3 class="font-heading mb-3 text-lg font-semibold text-sky-800">
+            Ucapan Anda Sudah Terkirim
+          </h3>
+          <p class="mb-1 font-medium text-sky-700">{{ existingWish.name }}</p>
+          <p class="mb-4 text-sm italic text-sky-600">
+            "{{ existingWish.message }}"
+          </p>
+          <p class="mb-3 text-xs text-sky-600">
+            Jika ingin mengubah ucapan, Anda dapat mengirim ulang.
+          </p>
+          <button
+            @click="startEdit"
+            class="inline-flex items-center gap-1.5 rounded-full border-2 border-sky-300 bg-white px-5 py-2 text-sm font-medium text-sky-700 transition-colors hover:bg-sky-50"
+          >
+            <Edit3 class="h-4 w-4" />
+            Kirim Ucapan Lain
+          </button>
+        </div>
+      </div>
+
+      <div
+        v-else-if="showForm"
         class="mx-auto mb-12 max-w-lg"
         data-aos="fade-up"
         data-aos-delay="200"
