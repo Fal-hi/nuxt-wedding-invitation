@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import { Eye, EyeOff } from "lucide-vue-next";
 import WeddingInfoForm from "~/components/admin/WeddingInfoForm.vue";
 import GalleryManager from "~/components/admin/GalleryManager.vue";
 import GuestDataManager from "~/components/admin/GuestDataManager.vue";
@@ -19,6 +20,7 @@ const isLoggingIn = ref(false);
 const loginError = ref(false);
 const username = ref("");
 const password = ref("");
+const showPassword = ref(false);
 
 const handleLogin = async () => {
   if (!username.value || !password.value) return;
@@ -87,16 +89,24 @@ const handleLogout = () => {
               placeholder="Username"
             />
           </div>
-          <div>
+          <div class="relative">
             <label for="password" class="sr-only">Password</label>
             <input
               id="password"
               v-model="password"
-              type="password"
+              :type="showPassword ? 'text' : 'password'"
               required
-              class="input-field"
+              class="input-field pr-12"
               placeholder="Password"
             />
+            <button
+              type="button"
+              @click="showPassword = !showPassword"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <Eye v-if="!showPassword" class="h-5 w-5" />
+              <EyeOff v-else class="h-5 w-5" />
+            </button>
           </div>
         </div>
 
