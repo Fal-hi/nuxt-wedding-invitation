@@ -14,6 +14,7 @@ import Gallery from "~/components/Gallery.vue";
 import EventDetails from "~/components/EventDetails.vue";
 import RSVPForm from "~/components/RSVPForm.vue";
 import GiftSection from "~/components/GiftSection.vue";
+import QuranVerse from "~/components/QuranVerse.vue";
 import Guestbook from "~/components/Guestbook.vue";
 import CloudParallax from "~/components/CloudParallax.vue";
 import MusicPlayer from "~/components/MusicPlayer.vue";
@@ -153,6 +154,7 @@ const handleOpenInvitation = () => {
     <Transition name="content">
       <div v-if="showContent" id="content">
         <CountdownTimer />
+        <QuranVerse />
         <CoupleProfile />
         <Gallery ref="galleryRef" />
         <EventDetails id="event-details" />

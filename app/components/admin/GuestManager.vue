@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { Plus, X, Pencil, Trash2, UserPlus, Send, CheckCircle, Clock } from "lucide-vue-next";
+import { Plus, X, UserPlus, CheckCircle, Clock } from "lucide-vue-next";
 import type { Guest, GuestType } from "~/types";
 import {
   getGuestTitle,
@@ -210,7 +210,7 @@ const guestTypeBadge: Record<GuestType, string> = {
   <div class="card border border-sky-100 bg-white/95 p-6 md:p-8">
     <div v-if="isLoading" class="flex justify-center py-12">
       <div
-        class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"
+        class="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"
       ></div>
     </div>
 
@@ -218,16 +218,16 @@ const guestTypeBadge: Record<GuestType, string> = {
       <!-- Header -->
       <div class="relative">
         <div
-          class="absolute -left-4 md:-left-8 top-0 bottom-0 w-1 rounded-r-md bg-gradient-to-b from-primary-light to-transparent"
+          class="from-primary-light absolute -left-4 bottom-0 top-0 w-1 rounded-r-md bg-gradient-to-b to-transparent md:-left-8"
         ></div>
         <div class="flex items-center justify-between">
           <div>
             <h3
-              class="font-heading text-xl font-semibold text-primary-dark md:text-2xl"
+              class="font-heading text-primary-dark text-xl font-semibold md:text-2xl"
             >
               Daftar Tamu Undangan
             </h3>
-            <p class="mt-1 text-sm text-primary">
+            <p class="text-primary mt-1 text-sm">
               Kelola daftar tamu undangan personal.
             </p>
           </div>
@@ -245,9 +245,7 @@ const guestTypeBadge: Record<GuestType, string> = {
           class="rounded-2xl border border-sky-100 bg-sky-50/50 p-6"
         >
           <div class="mb-4 flex items-center justify-between">
-            <h3
-              class="font-heading text-lg font-semibold text-primary-dark"
-            >
+            <h3 class="font-heading text-primary-dark text-lg font-semibold">
               <template v-if="editingId">Edit Tamu</template>
               <template v-else>Tambah Tamu Baru</template>
             </h3>
@@ -262,9 +260,7 @@ const guestTypeBadge: Record<GuestType, string> = {
           <form @submit.prevent="saveGuest" class="space-y-5">
             <div class="grid gap-5 md:grid-cols-2">
               <div>
-                <label
-                  class="mb-1.5 block text-sm font-medium text-gray-700"
-                >
+                <label class="mb-1.5 block text-sm font-medium text-gray-700">
                   Nama Tamu <span class="text-red-500">*</span>
                 </label>
                 <input
@@ -277,9 +273,7 @@ const guestTypeBadge: Record<GuestType, string> = {
                 />
               </div>
               <div>
-                <label
-                  class="mb-1.5 block text-sm font-medium text-gray-700"
-                >
+                <label class="mb-1.5 block text-sm font-medium text-gray-700">
                   Slug URL <span class="text-red-500">*</span>
                 </label>
                 <input
@@ -294,9 +288,7 @@ const guestTypeBadge: Record<GuestType, string> = {
                 </p>
               </div>
               <div>
-                <label
-                  class="mb-1.5 block text-sm font-medium text-gray-700"
-                >
+                <label class="mb-1.5 block text-sm font-medium text-gray-700">
                   Tipe Tamu <span class="text-red-500">*</span>
                 </label>
                 <select
@@ -310,9 +302,7 @@ const guestTypeBadge: Record<GuestType, string> = {
                 </select>
               </div>
               <div>
-                <label
-                  class="mb-1.5 block text-sm font-medium text-gray-700"
-                >
+                <label class="mb-1.5 block text-sm font-medium text-gray-700">
                   Nomor Telepon
                 </label>
                 <input
@@ -342,7 +332,9 @@ const guestTypeBadge: Record<GuestType, string> = {
                   v-if="isSaving"
                   class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
                 ></span>
-                {{ isSaving ? "Menyimpan..." : editingId ? "Simpan" : "Tambah" }}
+                {{
+                  isSaving ? "Menyimpan..." : editingId ? "Simpan" : "Tambah"
+                }}
               </button>
             </div>
           </form>
@@ -353,17 +345,15 @@ const guestTypeBadge: Record<GuestType, string> = {
 
       <!-- Table -->
       <div>
-        <div
-          class="mb-4 flex items-center justify-between"
-        >
-          <h3 class="font-heading text-lg font-semibold text-primary-dark">
+        <div class="mb-4 flex items-center justify-between">
+          <h3 class="font-heading text-primary-dark text-lg font-semibold">
             Total Tamu ({{ guests.length }})
           </h3>
         </div>
 
         <div
           v-if="guests.length === 0"
-          class="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-sky-200 bg-sky-50/30 py-12 text-center text-primary"
+          class="text-primary flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-sky-200 bg-sky-50/30 py-12 text-center"
         >
           <UserPlus class="mb-4 h-12 w-12 text-sky-300" />
           <p>Belum ada tamu undangan.</p>
@@ -372,10 +362,7 @@ const guestTypeBadge: Record<GuestType, string> = {
           </p>
         </div>
 
-        <div
-          v-else
-          class="overflow-x-auto"
-        >
+        <div v-else class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-100">
             <thead class="bg-white">
               <tr>
@@ -411,7 +398,13 @@ const guestTypeBadge: Record<GuestType, string> = {
                 </th>
                 <th
                   scope="col"
-                  class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500"
+                  class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500"
+                >
+                  Kirim
+                </th>
+                <th
+                  scope="col"
+                  class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500"
                 >
                   Aksi
                 </th>
@@ -424,17 +417,17 @@ const guestTypeBadge: Record<GuestType, string> = {
                 class="transition-colors hover:bg-sky-50/30"
               >
                 <td class="whitespace-nowrap px-4 py-3">
-                  <div class="text-sm font-semibold text-primary-dark">
+                  <div class="text-primary-dark text-sm font-semibold">
                     {{ guest.name }}
                   </div>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
                   <button
                     @click="copyLink(guest.slug)"
-                    class="group flex items-center gap-1 text-sm font-mono text-primary transition-colors hover:text-primary-dark"
+                    class="text-primary hover:text-primary-dark group flex items-center gap-1 font-mono text-sm transition-colors"
                     :title="`Salin tautan undangan`"
                   >
-                    <span class="truncate max-w-[140px]">{{ guest.slug }}</span>
+                    <span class="max-w-[140px] truncate">{{ guest.slug }}</span>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="12"
@@ -445,10 +438,19 @@ const guestTypeBadge: Record<GuestType, string> = {
                       stroke-width="2"
                       stroke-linecap="round"
                       stroke-linejoin="round"
-                      class="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      class="flex-shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
                     >
-                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                      <rect
+                        x="9"
+                        y="9"
+                        width="13"
+                        height="13"
+                        rx="2"
+                        ry="2"
+                      ></rect>
+                      <path
+                        d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                      ></path>
                     </svg>
                   </button>
                 </td>
@@ -479,57 +481,46 @@ const guestTypeBadge: Record<GuestType, string> = {
                     Belum Dikirim
                   </span>
                 </td>
-                <td class="whitespace-nowrap px-4 py-3 text-right">
+                <td
+                  class="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold"
+                >
+                  <button
+                    @click="sendWhatsApp(guest)"
+                    :disabled="sendingId === guest.id"
+                    class="rounded-lg px-3 py-1.5 text-green-500 transition-colors hover:bg-green-50"
+                    :title="
+                      guest.phone
+                        ? 'Kirim undangan via WhatsApp'
+                        : 'Nomor telepon tidak tersedia'
+                    "
+                  >
+                    Kirim
+                  </button>
+                </td>
+                <td
+                  class="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold"
+                >
                   <div class="flex items-center justify-end gap-1">
                     <button
                       @click="copyLink(guest.slug)"
-                      class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-sky-50 hover:text-primary"
+                      class="rounded-lg p-2 text-blue-500 transition-colors hover:bg-blue-50"
                       title="Salin tautan"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      >
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                      </svg>
+                      Salin
                     </button>
                     <button
                       @click="openEdit(guest)"
-                      class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-sky-50 hover:text-primary"
+                      class="rounded-lg p-2 text-yellow-500 transition-colors hover:bg-yellow-50"
                       title="Edit tamu"
                     >
-                      <Pencil class="h-4 w-4" />
-                    </button>
-                    <button
-                      @click="sendWhatsApp(guest)"
-                      :disabled="sendingId === guest.id"
-                      class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-green-50 hover:text-green-600 disabled:opacity-40"
-                      :title="
-                        guest.phone
-                          ? 'Kirim undangan via WhatsApp'
-                          : 'Nomor telepon tidak tersedia'
-                      "
-                    >
-                      <Send v-if="sendingId !== guest.id" class="h-4 w-4" />
-                      <span
-                        v-else
-                        class="block h-4 w-4 animate-spin rounded-full border-2 border-green-500 border-t-transparent"
-                      ></span>
+                      Ubah
                     </button>
                     <button
                       @click="deleteGuest(guest)"
-                      class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                      class="rounded-lg p-2 text-red-500 transition-colors hover:bg-red-50"
                       title="Hapus tamu"
                     >
-                      <Trash2 class="h-4 w-4" />
+                      Hapus
                     </button>
                   </div>
                 </td>

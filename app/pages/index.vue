@@ -142,6 +142,7 @@ const handleOpenInvitation = () => {
     <Transition name="content">
       <div v-if="showContent" id="content">
         <CountdownTimer />
+        <QuranVerse />
         <CoupleProfile />
         <Gallery ref="galleryRef" />
         <EventDetails id="event-details" />

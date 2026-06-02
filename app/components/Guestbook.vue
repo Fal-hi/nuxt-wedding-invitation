@@ -304,11 +304,11 @@ const closeSuccessPopup = () => {
     <div class="container-custom relative z-10">
       <div class="mb-12 text-center" data-aos="fade-up">
         <h2 class="font-heading text-accent mb-2 text-2xl md:text-3xl">
-          Ucapan &amp; Doa
+          Ucapan/Doa
         </h2>
         <div class="divider"></div>
         <p class="text-primary-light mt-4 text-sm">
-          Tuliskan ucapan dan doa terbaik untuk kami
+          Tuliskan ucapan/doa terbaik untuk kami
         </p>
       </div>
 
@@ -326,21 +326,21 @@ const closeSuccessPopup = () => {
             <CheckCircle class="h-7 w-7 text-sky-600" />
           </div>
           <h3 class="font-heading mb-3 text-lg font-semibold text-sky-800">
-            Ucapan Anda Sudah Terkirim
+            Ucapan/Doa Anda Sudah Terkirim
           </h3>
           <p class="mb-1 font-medium text-sky-700">{{ existingWish.name }}</p>
           <p class="mb-4 text-sm italic text-sky-600">
             "{{ existingWish.message }}"
           </p>
           <p class="mb-3 text-xs text-sky-600">
-            Jika ingin mengubah ucapan, Anda dapat mengirim ulang.
+            Jika ingin mengubah ucapan/doa, Anda dapat mengirim ulang.
           </p>
           <button
             @click="startEdit"
             class="inline-flex items-center gap-1.5 rounded-full border-2 border-sky-300 bg-white px-5 py-2 text-sm font-medium text-sky-700 transition-colors hover:bg-sky-50"
           >
             <Edit3 class="h-4 w-4" />
-            Kirim Ucapan Lain
+            Kirim Ucapan/Doa Lain
           </button>
         </div>
       </div>
