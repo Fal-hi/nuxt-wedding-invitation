@@ -28,9 +28,12 @@ const existingRsvp = ref<RSVP | null>(null);
 const isEditingRsvp = ref(false);
 const isLoadingCheck = ref(true);
 
-watch(() => props.guestName, (val) => {
-  if (val) name.value = val;
-});
+watch(
+  () => props.guestName,
+  (val) => {
+    if (val) name.value = val;
+  },
+);
 
 const loadExistingRsvp = async (guestId: string) => {
   isLoadingCheck.value = true;
@@ -51,7 +54,10 @@ const loadExistingRsvp = async (guestId: string) => {
     if (nameData && !nameError) {
       data = nameData;
       error = nameError;
-      await supabase.from("rsvps").update({ guest_id: guestId }).eq("id", data.id);
+      await supabase
+        .from("rsvps")
+        .update({ guest_id: guestId })
+        .eq("id", data.id);
     }
   }
 
@@ -59,7 +65,11 @@ const loadExistingRsvp = async (guestId: string) => {
     existingRsvp.value = data as RSVP;
     attendance.value = data.attendance as "hadir" | "tidak_hadir";
     if (data.num_guests >= 1 && data.num_guests <= 4) {
-      selectedGuestCount.value = String(data.num_guests) as "1" | "2" | "3" | "4";
+      selectedGuestCount.value = String(data.num_guests) as
+        | "1"
+        | "2"
+        | "3"
+        | "4";
     } else if (data.num_guests > 4) {
       selectedGuestCount.value = "more";
       customGuestCount.value = data.num_guests;
@@ -68,9 +78,12 @@ const loadExistingRsvp = async (guestId: string) => {
   isLoadingCheck.value = false;
 };
 
-watch(() => props.guestId, (val) => {
-  if (val) loadExistingRsvp(val);
-});
+watch(
+  () => props.guestId,
+  (val) => {
+    if (val) loadExistingRsvp(val);
+  },
+);
 
 onMounted(() => {
   if (props.guestId) loadExistingRsvp(props.guestId);
@@ -204,7 +217,9 @@ const guestCountLabel = computed(() => {
       </div>
 
       <div v-if="isLoadingCheck" class="mx-auto max-w-lg text-center">
-        <div class="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+        <div
+          class="border-primary mx-auto h-8 w-8 animate-spin rounded-full border-2 border-t-transparent"
+        ></div>
       </div>
 
       <div
@@ -212,18 +227,26 @@ const guestCountLabel = computed(() => {
         class="mx-auto max-w-lg"
         data-aos="fade-up"
       >
-        <div class="rounded-2xl border border-sky-200 bg-sky-50/80 p-6 text-center shadow-sm">
-          <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-sky-100">
+        <div
+          class="rounded-2xl border border-sky-200 bg-sky-50/80 p-6 text-center shadow-sm"
+        >
+          <div
+            class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-sky-100"
+          >
             <CheckCircle class="h-7 w-7 text-sky-600" />
           </div>
           <h3 class="font-heading mb-4 text-lg font-semibold text-sky-800">
             Konfirmasi Kehadiran Sudah Terkirim
           </h3>
           <div class="space-y-2 text-sm text-sky-700">
-            <p><span class="font-medium">Nama:</span> {{ existingRsvp.name }}</p>
+            <p>
+              <span class="font-medium">Nama:</span> {{ existingRsvp.name }}
+            </p>
             <p>
               <span class="font-medium">Status:</span>
-              {{ existingRsvp.attendance === "hadir" ? "Hadir" : "Tidak Hadir" }}
+              {{
+                existingRsvp.attendance === "hadir" ? "Hadir" : "Tidak Hadir"
+              }}
             </p>
             <p v-if="existingRsvp.attendance === 'hadir'">
               <span class="font-medium">Jumlah Tamu:</span>
@@ -264,7 +287,8 @@ const guestCountLabel = computed(() => {
             />
             <p v-if="props.guestName" class="text-primary mt-1.5 text-xs">
               <User class="mr-1 inline h-3 w-3" />
-              Nama di bawah ini merupakan perwakilan tamu yang menerima undangan.
+              Nama di bawah ini merupakan perwakilan tamu yang menerima
+              undangan.
             </p>
           </div>
 
@@ -374,7 +398,7 @@ const guestCountLabel = computed(() => {
           <div
             class="from-primary to-primary-light mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br shadow-lg"
           >
-            <Heart class="h-10 w-10 text-white" />
+            <Heart class="text-primary h-10 w-10" />
           </div>
           <h3 class="font-heading text-primary-dark mb-3 text-2xl font-bold">
             Terima Kasih!
