@@ -381,9 +381,9 @@ const deleteAccount = async (id: string) => {
                       <template v-else>
                         <button
                           @click="startEdit(account)"
-                          class="rounded-lg border border-sky-200 bg-sky-50 px-3 py-1.5 font-semibold text-sky-600 transition-colors hover:bg-sky-100"
+                          class="rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-1.5 font-semibold text-yellow-600 transition-colors hover:bg-yellow-100"
                         >
-                          Edit
+                          Ubah
                         </button>
                         <button
                           @click="deleteAccount(account.id)"

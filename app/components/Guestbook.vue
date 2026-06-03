@@ -272,6 +272,16 @@ const addWish = async () => {
 
 const showSwiper = computed(() => wishes.value.length > 0);
 
+const slidesPerView = computed(() => {
+  if (wishes.value.length <= 1) return 1;
+  if (wishes.value.length === 2) return 2;
+  return 3;
+});
+
+const enableLoop = computed(() => wishes.value.length > 3);
+
+const enableAutoplay = computed(() => wishes.value.length > 3);
+
 const closeSuccessPopup = () => {
   showSuccessPopup.value = false;
   successPopupData.value = { name: "", message: "" };
@@ -399,19 +409,31 @@ const closeSuccessPopup = () => {
       </div>
       <Swiper
         v-else-if="showSwiper"
-        :modules="[Autoplay]"
-        :autoplay="{
-          delay: 0,
-          disableOnInteraction: false,
-          pauseOnMouseEnter: true,
+        :style="{
+          height:
+            wishes.length === 1
+              ? '150px'
+              : wishes.length === 2
+                ? '230px'
+                : '350px',
         }"
+        :modules="[Autoplay]"
+        :autoplay="
+          enableAutoplay
+            ? {
+                delay: 0,
+                disableOnInteraction: false,
+                pauseOnMouseEnter: true,
+              }
+            : false
+        "
         direction="vertical"
-        :slides-per-view="3"
-        :space-between="40"
+        :slides-per-view="slidesPerView"
+        :space-between="20"
         :speed="4000"
-        :loop="true"
+        :loop="enableLoop"
         @swiper="onSwiper"
-        class="swiper-wishes mx-auto max-h-[300px] max-w-2xl"
+        class="swiper-wishes mx-auto max-w-2xl"
       >
         <SwiperSlide v-for="wish in wishes" :key="wish.id">
           <div

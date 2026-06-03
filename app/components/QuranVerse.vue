@@ -44,7 +44,7 @@
 
         <div class="divider mb-6"></div>
 
-        <p class="mx-auto max-w-3xl text-sm leading-relaxed">
+        <p class="text-accent mx-auto max-w-3xl text-sm leading-relaxed">
           Dan di antara tanda-tanda (kebesaran)-Nya ialah Dia menciptakan
           pasangan-pasangan untukmu dari jenismu sendiri, agar kamu cenderung
           dan merasa tenteram kepadanya, dan Dia menjadikan di antaramu rasa

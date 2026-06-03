@@ -487,7 +487,7 @@ const guestTypeBadge: Record<GuestType, string> = {
                   <button
                     @click="sendWhatsApp(guest)"
                     :disabled="sendingId === guest.id"
-                    class="rounded-lg px-3 py-1.5 text-green-500 transition-colors hover:bg-green-50"
+                    class="rounded-lg border border-green-200 bg-green-50 px-3 py-1.5 font-semibold text-green-600 transition-colors hover:bg-green-100"
                     :title="
                       guest.phone
                         ? 'Kirim undangan via WhatsApp'
@@ -503,22 +503,19 @@ const guestTypeBadge: Record<GuestType, string> = {
                   <div class="flex items-center justify-end gap-1">
                     <button
                       @click="copyLink(guest.slug)"
-                      class="rounded-lg p-2 text-blue-500 transition-colors hover:bg-blue-50"
-                      title="Salin tautan"
+                      class="rounded-lg border border-sky-200 bg-sky-50 px-3 py-1.5 font-semibold text-sky-600 transition-colors hover:bg-sky-100"
                     >
                       Salin
                     </button>
                     <button
                       @click="openEdit(guest)"
-                      class="rounded-lg p-2 text-yellow-500 transition-colors hover:bg-yellow-50"
-                      title="Edit tamu"
+                      class="rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-1.5 font-semibold text-yellow-600 transition-colors hover:bg-yellow-100"
                     >
                       Ubah
                     </button>
                     <button
                       @click="deleteGuest(guest)"
-                      class="rounded-lg p-2 text-red-500 transition-colors hover:bg-red-50"
-                      title="Hapus tamu"
+                      class="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 font-semibold text-red-500 transition-colors hover:bg-red-100"
                     >
                       Hapus
                     </button>
