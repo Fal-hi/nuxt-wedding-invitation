@@ -36,6 +36,10 @@ onMounted(async () => {
   const slug = route.params.guest as string;
   await loadGuest(slug);
 
+  if (!guest.value) {
+    return navigateTo("/");
+  }
+
   AOS.init({
     duration: 800,
     once: true,

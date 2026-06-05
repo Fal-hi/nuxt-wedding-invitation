@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { Plus, X, UserPlus, CheckCircle, Clock } from "lucide-vue-next";
 import type { Guest, GuestType } from "~/types";
 import {
@@ -12,6 +12,12 @@ const supabase = useSupabase();
 const origin = ref("");
 
 const guests = ref<Guest[]>([]);
+const searchQuery = ref("");
+const filteredGuests = computed(() => {
+  if (!searchQuery.value.trim()) return guests.value;
+  const q = searchQuery.value.toLowerCase().trim();
+  return guests.value.filter((g) => g.name.toLowerCase().includes(q));
+});
 const isLoading = ref(true);
 const brideNickname = ref("");
 const groomNickname = ref("");
@@ -56,14 +62,13 @@ onMounted(() => {
 const autoSlug = (name: string) => {
   return name
     .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
 };
 
 const watchNameForSlug = () => {
-  if (!editingId.value && !formSlug.value) {
+  if (!editingId.value) {
     formSlug.value = autoSlug(formName.value);
   }
 };
@@ -189,7 +194,7 @@ const sendWhatsApp = async (guest: Guest) => {
     .from("guest_list")
     .update({
       invitation_sent: true,
-      sent_at: new Date().toISOString(),
+      sent_at: new Date(),
     })
     .eq("id", guest.id);
 
@@ -345,10 +350,23 @@ const guestTypeBadge: Record<GuestType, string> = {
 
       <!-- Table -->
       <div>
-        <div class="mb-4 flex items-center justify-between">
+        <div
+          class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+        >
           <h3 class="font-heading text-primary-dark text-lg font-semibold">
             Total Tamu ({{ guests.length }})
+            <span v-if="searchQuery">
+              &middot; Filtered ({{ filteredGuests.length }})</span
+            >
           </h3>
+          <div class="w-full sm:w-1/4">
+            <input
+              v-model="searchQuery"
+              type="text"
+              class="input-field w-full bg-white"
+              placeholder="Cari nama tamu..."
+            />
+          </div>
         </div>
 
         <div
@@ -362,9 +380,20 @@ const guestTypeBadge: Record<GuestType, string> = {
           </p>
         </div>
 
-        <div v-else class="overflow-x-auto">
+        <div
+          v-else-if="searchQuery && filteredGuests.length === 0"
+          class="text-primary flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-sky-200 bg-sky-50/30 py-12 text-center"
+        >
+          <p>Tamu tidak ditemukan.</p>
+          <p class="mt-1 text-xs">Coba kata kunci lain untuk pencarian.</p>
+        </div>
+
+        <div
+          v-else
+          class="max-h-[500px] overflow-auto rounded-xl border border-gray-100"
+        >
           <table class="min-w-full divide-y divide-gray-100">
-            <thead class="bg-white">
+            <thead class="sticky top-0 z-10 bg-white shadow-sm">
               <tr>
                 <th
                   scope="col"
@@ -412,7 +441,7 @@ const guestTypeBadge: Record<GuestType, string> = {
             </thead>
             <tbody class="divide-y divide-gray-100 bg-white">
               <tr
-                v-for="guest in guests"
+                v-for="guest in filteredGuests"
                 :key="guest.id"
                 class="transition-colors hover:bg-sky-50/30"
               >

@@ -75,8 +75,7 @@ const saveInfo = async () => {
 
   const payload = { ...formData.value };
   if (payload.wedding_date) {
-    // Convert back to UTC for Supabase
-    payload.wedding_date = new Date(payload.wedding_date).toISOString();
+    payload.wedding_date = payload.wedding_date;
   }
 
   const { error } = await supabase

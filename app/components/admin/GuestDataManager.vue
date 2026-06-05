@@ -9,6 +9,21 @@ const rsvps = ref<any[]>([]);
 const wishes = ref<any[]>([]);
 const isLoading = ref(true);
 
+const rsvpSearch = ref("");
+const wishSearch = ref("");
+
+const filteredRsvps = computed(() => {
+  if (!rsvpSearch.value.trim()) return rsvps.value;
+  const q = rsvpSearch.value.toLowerCase().trim();
+  return rsvps.value.filter((r) => r.name?.toLowerCase().includes(q));
+});
+
+const filteredWishes = computed(() => {
+  if (!wishSearch.value.trim()) return wishes.value;
+  const q = wishSearch.value.toLowerCase().trim();
+  return wishes.value.filter((w) => w.name?.toLowerCase().includes(q));
+});
+
 const fetchAllData = async () => {
   isLoading.value = true;
 
@@ -120,26 +135,36 @@ const totalIndividualGuests = computed(() => {
       ></div>
     </div>
 
-    <div v-else class="space-y-8">
+    <div v-else class="flex flex-col gap-4 lg:flex-row">
       <!-- Tabel RSVP -->
       <div
-        class="card flex max-h-[600px] flex-col overflow-hidden border border-sky-100 bg-white/95 p-0"
+        class="card flex max-h-[600px] w-full flex-col overflow-hidden border border-sky-100 bg-white/95 p-0 xl:w-1/2"
       >
         <div
-          class="flex items-center justify-between border-b border-sky-100 bg-sky-50/50 px-6 py-5"
+          class="flex flex-col gap-3 border-b border-sky-100 bg-sky-50/50 px-6 py-4 sm:flex-row sm:items-center sm:justify-between"
         >
-          <h3
-            class="font-heading text-primary-dark text-lg font-semibold md:text-xl"
-          >
-            Daftar Kehadiran (RSVP)
-          </h3>
-          <span
-            class="bg-primary/10 text-primary inline-flex items-center rounded-full px-3 py-1 text-xs font-bold"
-          >
-            {{ rsvps.length }} Tamu
-          </span>
+          <div class="flex items-center gap-3">
+            <h3
+              class="font-heading text-primary-dark text-lg font-semibold md:text-xl"
+            >
+              Daftar Kehadiran (RSVP)
+            </h3>
+            <span
+              class="bg-primary/10 text-primary inline-flex items-center rounded-full px-3 py-1 text-xs font-bold"
+            >
+              {{ rsvps.length }} Tamu
+            </span>
+          </div>
+          <div class="w-full sm:w-1/4">
+            <input
+              v-model="rsvpSearch"
+              type="text"
+              class="input-field bg-white"
+              placeholder="Cari nama..."
+            />
+          </div>
         </div>
-        <div class="flex-1 overflow-auto">
+        <div class="max-h-[500px] flex-1 overflow-auto">
           <table class="min-w-full divide-y divide-gray-100">
             <thead class="sticky top-0 z-10 bg-white shadow-sm">
               <tr>
@@ -171,7 +196,7 @@ const totalIndividualGuests = computed(() => {
             </thead>
             <tbody class="divide-y divide-gray-100 bg-white">
               <tr
-                v-for="rsvp in rsvps"
+                v-for="rsvp in filteredRsvps"
                 :key="rsvp.id"
                 class="transition-colors hover:bg-sky-50/30"
               >
@@ -236,32 +261,40 @@ const totalIndividualGuests = computed(() => {
                   </button>
                 </td>
               </tr>
-              <tr v-if="rsvps.length === 0">
+              <tr v-if="filteredRsvps.length === 0">
                 <td
                   colspan="4"
                   class="px-6 py-12 text-center text-sm text-gray-500"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="48"
-                    height="48"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="mx-auto mb-4 text-gray-300"
-                  >
-                    <path
-                      d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                    ></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                    <polyline points="10 9 9 9 8 9"></polyline>
-                  </svg>
-                  Belum ada tamu yang mengisi RSVP.
+                  <template v-if="rsvpSearch && rsvps.length > 0">
+                    <p>Tamu tidak ditemukan.</p>
+                    <p class="mt-1 text-xs text-gray-400">
+                      Coba kata kunci lain.
+                    </p>
+                  </template>
+                  <template v-else>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="48"
+                      height="48"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="mx-auto mb-4 text-gray-300"
+                    >
+                      <path
+                        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                      ></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="16" y1="13" x2="8" y2="13"></line>
+                      <line x1="16" y1="17" x2="8" y2="17"></line>
+                      <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    Belum ada tamu yang mengisi RSVP.
+                  </template>
                 </td>
               </tr>
             </tbody>
@@ -271,23 +304,33 @@ const totalIndividualGuests = computed(() => {
 
       <!-- Tabel Wishes -->
       <div
-        class="card flex max-h-[600px] flex-col overflow-hidden border border-sky-100 bg-white/95 p-0"
+        class="card flex max-h-[600px] w-full flex-col overflow-hidden border border-sky-100 bg-white/95 p-0 xl:w-1/2"
       >
         <div
-          class="flex items-center justify-between border-b border-sky-100 bg-sky-50/50 px-6 py-5"
+          class="flex flex-col gap-3 border-b border-sky-100 bg-sky-50/50 px-6 py-4 sm:flex-row sm:items-center sm:justify-between"
         >
-          <h3
-            class="font-heading text-primary-dark text-lg font-semibold md:text-xl"
-          >
-            Buku Tamu (Ucapan & Doa)
-          </h3>
-          <span
-            class="bg-primary/10 text-primary inline-flex items-center rounded-full px-3 py-1 text-xs font-bold"
-          >
-            {{ wishes.length }} Pesan
-          </span>
+          <div class="flex items-center gap-3">
+            <h3
+              class="font-heading text-primary-dark text-lg font-semibold md:text-xl"
+            >
+              Buku Tamu (Ucapan & Doa)
+            </h3>
+            <span
+              class="bg-primary/10 text-primary inline-flex items-center rounded-full px-3 py-1 text-xs font-bold"
+            >
+              {{ wishes.length }} Pesan
+            </span>
+          </div>
+          <div class="w-full sm:w-1/4">
+            <input
+              v-model="wishSearch"
+              type="text"
+              class="input-field bg-white"
+              placeholder="Cari nama..."
+            />
+          </div>
         </div>
-        <div class="flex-1 overflow-auto">
+        <div class="max-h-[500px] flex-1 overflow-auto">
           <table class="min-w-full divide-y divide-gray-100">
             <thead class="sticky top-0 z-10 bg-white shadow-sm">
               <tr>
@@ -313,7 +356,7 @@ const totalIndividualGuests = computed(() => {
             </thead>
             <tbody class="divide-y divide-gray-100 bg-white">
               <tr
-                v-for="wish in wishes"
+                v-for="wish in filteredWishes"
                 :key="wish.id"
                 class="transition-colors hover:bg-sky-50/30"
               >
@@ -345,28 +388,36 @@ const totalIndividualGuests = computed(() => {
                   </button>
                 </td>
               </tr>
-              <tr v-if="wishes.length === 0">
+              <tr v-if="filteredWishes.length === 0">
                 <td
                   colspan="3"
                   class="px-6 py-12 text-center text-sm text-gray-500"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="48"
-                    height="48"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="mx-auto mb-4 text-gray-300"
-                  >
-                    <path
-                      d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                    ></path>
-                  </svg>
-                  Belum ada ucapan yang masuk di Buku Tamu.
+                  <template v-if="wishSearch && wishes.length > 0">
+                    <p>Tamu tidak ditemukan.</p>
+                    <p class="mt-1 text-xs text-gray-400">
+                      Coba kata kunci lain.
+                    </p>
+                  </template>
+                  <template v-else>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="48"
+                      height="48"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="mx-auto mb-4 text-gray-300"
+                    >
+                      <path
+                        d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                      ></path>
+                    </svg>
+                    Belum ada ucapan yang masuk di Buku Tamu.
+                  </template>
                 </td>
               </tr>
             </tbody>
