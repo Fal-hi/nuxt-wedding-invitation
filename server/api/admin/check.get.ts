@@ -1,10 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
+import bcrypt from "bcrypt";
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
-  const token = getCookie(event, "admin_auth");
+  const cookieToken = getCookie(event, "admin_auth");
 
-  if (!token) {
+  if (!cookieToken) {
     return { authenticated: false };
   }
 
@@ -13,15 +14,17 @@ export default defineEventHandler(async (event) => {
     config.supabaseServiceKey,
   );
 
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("admin_users")
-    .select("id")
-    .eq("login_token", token)
+    .select("id, login_token")
+    .not("login_token", "is", null)
     .maybeSingle();
 
-  if (!data || error) {
+  if (!data?.login_token) {
     return { authenticated: false };
   }
 
-  return { authenticated: true };
+  const isValid = await bcrypt.compare(cookieToken, data.login_token);
+
+  return { authenticated: isValid };
 });
