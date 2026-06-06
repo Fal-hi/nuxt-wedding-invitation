@@ -9,10 +9,12 @@ import BankAccountManager from "~/components/admin/BankAccountManager.vue";
 import { useSupabase } from "~/composables/useSupabase";
 
 const supabase = useSupabase();
+const generateToken = () => crypto.randomUUID();
 
 const activeTab = ref("info");
-const isAuthenticated = useCookie("admin_auth", {
-  default: () => false,
+const isCheckingAuth = ref(true);
+const adminToken = useCookie<string | null>("admin_auth", {
+  default: () => null,
   maxAge: 60 * 60 * 24, // 1 day
 });
 
@@ -24,33 +26,79 @@ const showPassword = ref(false);
 
 const handleLogin = async () => {
   if (!username.value || !password.value) return;
+
   isLoggingIn.value = true;
   loginError.value = false;
 
   const { data, error } = await supabase
     .from("admin_users")
-    .select("*")
+    .select("id")
     .eq("username", username.value)
     .eq("password", password.value)
-    .single();
-
-  isLoggingIn.value = false;
+    .maybeSingle();
 
   if (data && !error) {
-    isAuthenticated.value = true;
+    const newToken = generateToken();
+
+    await supabase
+      .from("admin_users")
+      .update({
+        login_token: newToken,
+      })
+      .eq("id", data.id);
+
+    adminToken.value = newToken;
   } else {
     loginError.value = true;
   }
+
+  isLoggingIn.value = false;
 };
 
-const handleLogout = () => {
-  isAuthenticated.value = false;
+const handleLogout = async () => {
+  if (adminToken.value) {
+    await supabase
+      .from("admin_users")
+      .update({
+        login_token: null,
+      })
+      .eq("login_token", adminToken.value);
+  }
+
+  adminToken.value = null;
 };
+
+onMounted(async () => {
+  if (!adminToken.value) {
+    isCheckingAuth.value = false;
+    return;
+  }
+
+  const { data } = await supabase
+    .from("admin_users")
+    .select("id")
+    .eq("login_token", adminToken.value)
+    .maybeSingle();
+
+  if (!data) {
+    adminToken.value = null;
+  }
+
+  isCheckingAuth.value = false;
+});
 </script>
 
 <template>
+  <div v-if="isCheckingAuth">
+    <div class="flex min-h-screen items-center justify-center">
+      <div
+        class="h-8 w-8 animate-spin rounded-full border-4 border-sky-500 border-t-transparent"
+      ></div>
+    </div>
+  </div>
+
   <div
-    v-if="!isAuthenticated"
+    v-else-if="!adminToken"
     class="bg-sky-gradient relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-12 sm:px-6 lg:px-8"
   >
     <div class="pointer-events-none absolute inset-0">
