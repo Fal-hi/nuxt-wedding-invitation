@@ -6,16 +6,12 @@ import GalleryManager from "~/components/admin/GalleryManager.vue";
 import GuestDataManager from "~/components/admin/GuestDataManager.vue";
 import GuestManager from "~/components/admin/GuestManager.vue";
 import BankAccountManager from "~/components/admin/BankAccountManager.vue";
-import { useSupabase } from "~/composables/useSupabase";
-
-const supabase = useSupabase();
-const generateToken = () => crypto.randomUUID();
 
 const activeTab = ref("info");
 const isCheckingAuth = ref(true);
 const adminToken = useCookie<string | null>("admin_auth", {
   default: () => null,
-  maxAge: 60 * 60 * 24, // 1 day
+  maxAge: 60 * 60 * 24,
 });
 
 const isLoggingIn = ref(false);
@@ -30,24 +26,13 @@ const handleLogin = async () => {
   isLoggingIn.value = true;
   loginError.value = false;
 
-  const { data, error } = await supabase
-    .from("admin_users")
-    .select("id")
-    .eq("username", username.value)
-    .eq("password", password.value)
-    .maybeSingle();
+  const result = await $fetch("/api/admin/login", {
+    method: "POST",
+    body: { username: username.value, password: password.value },
+  }).catch(() => ({ success: false }));
 
-  if (data && !error) {
-    const newToken = generateToken();
-
-    await supabase
-      .from("admin_users")
-      .update({
-        login_token: newToken,
-      })
-      .eq("id", data.id);
-
-    adminToken.value = newToken;
+  if (result.success) {
+    adminToken.value = (result as { success: true; token: string }).token;
   } else {
     loginError.value = true;
   }
@@ -56,14 +41,10 @@ const handleLogin = async () => {
 };
 
 const handleLogout = async () => {
-  if (adminToken.value) {
-    await supabase
-      .from("admin_users")
-      .update({
-        login_token: null,
-      })
-      .eq("login_token", adminToken.value);
-  }
+  await $fetch("/api/admin/logout", {
+    method: "POST",
+    body: { token: adminToken.value },
+  }).catch(() => {});
 
   adminToken.value = null;
 };
@@ -74,13 +55,11 @@ onMounted(async () => {
     return;
   }
 
-  const { data } = await supabase
-    .from("admin_users")
-    .select("id")
-    .eq("login_token", adminToken.value)
-    .maybeSingle();
+  const result = await $fetch("/api/admin/check").catch(() => ({
+    authenticated: false,
+  }));
 
-  if (!data) {
+  if (!result.authenticated) {
     adminToken.value = null;
   }
 
