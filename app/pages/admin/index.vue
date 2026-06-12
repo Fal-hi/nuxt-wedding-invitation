@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { Eye, EyeOff } from "lucide-vue-next";
+import { ref, nextTick } from "vue";
+import { Eye, EyeOff, LogOut } from "lucide-vue-next";
 import WeddingInfoForm from "~/components/admin/WeddingInfoForm.vue";
 import GalleryManager from "~/components/admin/GalleryManager.vue";
 import GuestDataManager from "~/components/admin/GuestDataManager.vue";
@@ -33,6 +33,9 @@ const handleLogin = async () => {
 
   if (result.success) {
     adminToken.value = (result as { success: true; token: string }).token;
+    await nextTick();
+    window.location.replace("/admin");
+    return;
   } else {
     loginError.value = true;
   }
@@ -178,18 +181,20 @@ onMounted(async () => {
         >
           Admin Dashboard
         </h1>
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2">
           <NuxtLink
             to="/"
-            class="text-primary hover:text-primary-dark flex text-sm font-medium hover:underline"
+            class="flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-600 transition-colors hover:border-sky-500 hover:bg-sky-500 hover:text-white"
           >
-            Lihat Undangan &rarr;
+            <Eye class="h-4 w-4" />
+            <span class="hidden md:block">Lihat Undangan</span>
           </NuxtLink>
           <button
             @click="handleLogout"
-            class="rounded-full border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:border-red-500 hover:bg-red-500 hover:text-white"
+            class="flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:border-red-500 hover:bg-red-500 hover:text-white"
           >
-            Logout
+            <LogOut class="h-4 w-4" />
+            <span class="hidden md:block">Logout</span>
           </button>
         </div>
       </div>
@@ -258,11 +263,13 @@ onMounted(async () => {
         </div>
 
         <div class="px-4 sm:px-0">
-          <WeddingInfoForm v-if="activeTab === 'info'" />
-          <GalleryManager v-if="activeTab === 'gallery'" />
-          <GuestDataManager v-if="activeTab === 'guests'" />
-          <GuestManager v-if="activeTab === 'guestlist'" />
-          <BankAccountManager v-if="activeTab === 'bank'" />
+          <KeepAlive>
+            <WeddingInfoForm v-if="activeTab === 'info'" />
+            <GalleryManager v-else-if="activeTab === 'gallery'" />
+            <GuestDataManager v-else-if="activeTab === 'guests'" />
+            <GuestManager v-else-if="activeTab === 'guestlist'" />
+            <BankAccountManager v-else-if="activeTab === 'bank'" />
+          </KeepAlive>
         </div>
       </div>
     </main>

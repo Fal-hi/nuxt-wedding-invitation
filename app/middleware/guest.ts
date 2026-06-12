@@ -5,7 +5,9 @@ export default defineNuxtRouteMiddleware((to) => {
     return navigateTo("/");
   }
 
-  if (!/^[a-z-]+$/.test(slug)) {
-    return navigateTo("/");
+  const normalized = slug.toLowerCase().trim();
+
+  if (normalized !== slug) {
+    return navigateTo(`/${normalized}`);
   }
 });

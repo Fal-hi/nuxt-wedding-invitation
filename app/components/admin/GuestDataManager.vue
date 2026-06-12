@@ -1,76 +1,77 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
-import { useSupabase } from "~/composables/useSupabase";
+import { ref, computed } from "vue";
 import FormatDate from "~/utils/FormatDate.vue";
-
-const supabase = useSupabase();
-
-const rsvps = ref<any[]>([]);
-const wishes = ref<any[]>([]);
-const isLoading = ref(true);
+import {
+  useRsvpsQuery,
+  useDeleteRsvpMutation,
+} from "~/composables/queries/useRsvpsQuery";
+import {
+  useWishesQuery,
+  useDeleteWishMutation,
+} from "~/composables/queries/useWishesQuery";
+import { RefreshCcw } from "lucide-vue-next";
 
 const rsvpSearch = ref("");
 const wishSearch = ref("");
 
+const {
+  data: rsvps,
+  isLoading: rsvpsLoading,
+  isFetching: rsvpsFetching,
+  refetch: refetchRsvps,
+} = useRsvpsQuery();
+const {
+  data: wishes,
+  isLoading: wishesLoading,
+  isFetching: wishesFetching,
+  refetch: refetchWishes,
+} = useWishesQuery();
+
+const deleteRsvpMutation = useDeleteRsvpMutation();
+const deleteWishMutation = useDeleteWishMutation();
+
+const isLoading = computed(() => rsvpsLoading.value || wishesLoading.value);
+
 const filteredRsvps = computed(() => {
-  if (!rsvpSearch.value.trim()) return rsvps.value;
+  if (!rsvpSearch.value.trim()) return rsvps.value || [];
   const q = rsvpSearch.value.toLowerCase().trim();
-  return rsvps.value.filter((r) => r.name?.toLowerCase().includes(q));
+  return (rsvps.value || []).filter((r: any) =>
+    r.name?.toLowerCase().includes(q),
+  );
 });
 
 const filteredWishes = computed(() => {
-  if (!wishSearch.value.trim()) return wishes.value;
+  if (!wishSearch.value.trim()) return wishes.value || [];
   const q = wishSearch.value.toLowerCase().trim();
-  return wishes.value.filter((w) => w.name?.toLowerCase().includes(q));
+  return (wishes.value || []).filter((w: any) =>
+    w.name?.toLowerCase().includes(q),
+  );
 });
 
-const fetchAllData = async () => {
-  isLoading.value = true;
-
-  const [rsvpRes, wishesRes] = await Promise.all([
-    supabase
-      .from("rsvps")
-      .select("*")
-      .order("created_at", { ascending: false }),
-    supabase.from("wishes").select("*").order("id", { ascending: false }),
-  ]);
-
-  if (rsvpRes.data) rsvps.value = rsvpRes.data;
-  if (wishesRes.data) wishes.value = wishesRes.data;
-
-  isLoading.value = false;
-};
-
-onMounted(() => {
-  fetchAllData();
-});
-
-const deleteRsvp = async (id: number) => {
-  if (confirm("Hapus rsvp ini?")) {
-    const { error } = await supabase.from("rsvps").delete().eq("id", id);
-    if (!error) fetchAllData();
-  }
-};
-
-const deleteWish = async (id: number) => {
-  if (confirm("Hapus ucapan ini?")) {
-    const { error } = await supabase.from("wishes").delete().eq("id", id);
-    if (!error) fetchAllData();
-  }
-};
-
-const totalRsvps = computed(() => rsvps.value.length);
+const totalRsvps = computed(() => (rsvps.value || []).length);
 const attendingRsvps = computed(
-  () => rsvps.value.filter((r) => r.attendance === "hadir").length,
+  () => (rsvps.value || []).filter((r: any) => r.attendance === "hadir").length,
 );
 const notAttendingRsvps = computed(
-  () => rsvps.value.filter((r) => r.attendance === "tidak").length,
+  () => (rsvps.value || []).filter((r: any) => r.attendance === "tidak").length,
 );
 const totalIndividualGuests = computed(() => {
-  return rsvps.value
-    .filter((r) => r.attendance === "hadir")
-    .reduce((sum, current) => sum + (current.num_guests || 0), 0);
+  return (rsvps.value || [])
+    .filter((r: any) => r.attendance === "hadir")
+    .reduce((sum: number, current: any) => sum + (current.num_guests || 0), 0);
 });
+
+const deleteRsvp = (id: number) => {
+  if (confirm("Hapus rsvp ini?")) {
+    deleteRsvpMutation.mutate(id);
+  }
+};
+
+const deleteWish = (id: number) => {
+  if (confirm("Hapus ucapan ini?")) {
+    deleteWishMutation.mutate(id);
+  }
+};
 </script>
 
 <template>
@@ -135,10 +136,10 @@ const totalIndividualGuests = computed(() => {
       ></div>
     </div>
 
-    <div v-else class="flex flex-col gap-4 lg:flex-row">
+    <div v-else class="flex flex-col gap-4">
       <!-- Tabel RSVP -->
       <div
-        class="card flex max-h-[600px] w-full flex-col overflow-hidden border border-sky-100 bg-white/95 p-0 xl:w-1/2"
+        class="card relative flex max-h-[600px] w-full flex-col overflow-hidden border border-sky-100 bg-white/95 p-0"
       >
         <div
           class="flex flex-col gap-3 border-b border-sky-100 bg-sky-50/50 px-6 py-4 sm:flex-row sm:items-center sm:justify-between"
@@ -152,10 +153,22 @@ const totalIndividualGuests = computed(() => {
             <span
               class="bg-primary/10 text-primary inline-flex items-center rounded-full px-3 py-1 text-xs font-bold"
             >
-              {{ rsvps.length }} Tamu
+              {{ totalRsvps }} Tamu
             </span>
           </div>
-          <div class="w-full sm:w-1/4">
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              @click="() => refetchRsvps()"
+              :disabled="rsvpsFetching"
+              class="flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-600 transition-colors hover:border-sky-500 hover:bg-blue-500 hover:text-white"
+            >
+              <span class="hidden md:block">Refresh</span>
+              <RefreshCcw
+                class="h-4 w-4"
+                :class="{ 'animate-spin': rsvpsFetching }"
+              />
+            </button>
             <input
               v-model="rsvpSearch"
               type="text"
@@ -266,7 +279,7 @@ const totalIndividualGuests = computed(() => {
                   colspan="4"
                   class="px-6 py-12 text-center text-sm text-gray-500"
                 >
-                  <template v-if="rsvpSearch && rsvps.length > 0">
+                  <template v-if="rsvpSearch && (rsvps || []).length > 0">
                     <p>Tamu tidak ditemukan.</p>
                     <p class="mt-1 text-xs text-gray-400">
                       Coba kata kunci lain.
@@ -300,11 +313,24 @@ const totalIndividualGuests = computed(() => {
             </tbody>
           </table>
         </div>
+
+        <!-- RSVP Loading overlay -->
+        <div
+          v-if="rsvpsFetching && !rsvpsLoading"
+          class="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[1px]"
+        >
+          <div class="flex flex-col items-center gap-2">
+            <div
+              class="border-primary h-6 w-6 animate-spin rounded-full border-[3px] border-t-transparent"
+            ></div>
+            <span class="text-primary text-xs font-medium">Memperbarui...</span>
+          </div>
+        </div>
       </div>
 
       <!-- Tabel Wishes -->
       <div
-        class="card flex max-h-[600px] w-full flex-col overflow-hidden border border-sky-100 bg-white/95 p-0 xl:w-1/2"
+        class="card relative flex max-h-[600px] w-full flex-col overflow-hidden border border-sky-100 bg-white/95 p-0"
       >
         <div
           class="flex flex-col gap-3 border-b border-sky-100 bg-sky-50/50 px-6 py-4 sm:flex-row sm:items-center sm:justify-between"
@@ -318,10 +344,22 @@ const totalIndividualGuests = computed(() => {
             <span
               class="bg-primary/10 text-primary inline-flex items-center rounded-full px-3 py-1 text-xs font-bold"
             >
-              {{ wishes.length }} Pesan
+              {{ (wishes || []).length }} Pesan
             </span>
           </div>
-          <div class="w-full sm:w-1/4">
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              @click="() => refetchWishes()"
+              :disabled="wishesFetching"
+              class="flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-600 transition-colors hover:border-sky-500 hover:bg-blue-500 hover:text-white"
+            >
+              <span class="hidden md:block">Refresh</span>
+              <RefreshCcw
+                class="h-4 w-4"
+                :class="{ 'animate-spin': wishesFetching }"
+              />
+            </button>
             <input
               v-model="wishSearch"
               type="text"
@@ -393,7 +431,7 @@ const totalIndividualGuests = computed(() => {
                   colspan="3"
                   class="px-6 py-12 text-center text-sm text-gray-500"
                 >
-                  <template v-if="wishSearch && wishes.length > 0">
+                  <template v-if="wishSearch && (wishes || []).length > 0">
                     <p>Tamu tidak ditemukan.</p>
                     <p class="mt-1 text-xs text-gray-400">
                       Coba kata kunci lain.
@@ -422,6 +460,19 @@ const totalIndividualGuests = computed(() => {
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Wishes Loading overlay -->
+        <div
+          v-if="wishesFetching && !wishesLoading"
+          class="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[1px]"
+        >
+          <div class="flex flex-col items-center gap-2">
+            <div
+              class="border-primary h-6 w-6 animate-spin rounded-full border-[3px] border-t-transparent"
+            ></div>
+            <span class="text-primary text-xs font-medium">Memperbarui...</span>
+          </div>
         </div>
       </div>
     </div>

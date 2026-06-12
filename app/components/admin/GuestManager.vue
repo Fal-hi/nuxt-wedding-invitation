@@ -1,26 +1,40 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { Plus, X, UserPlus, CheckCircle, Clock } from "lucide-vue-next";
-import type { Guest, GuestType } from "~/types";
+import { ref, computed } from "vue";
 import {
-  getGuestTitle,
-  formatPhoneNumber,
-  generateWhatsappMessage,
-} from "~/utils/invitation";
+  Plus,
+  X,
+  UserPlus,
+  CheckCircle,
+  Clock,
+  RefreshCcw,
+} from "lucide-vue-next";
+import type { Guest, GuestType } from "~/types";
+import { formatPhoneNumber, generateWhatsappMessage } from "~/utils/invitation";
+import {
+  useGuestListQuery,
+  useWeddingNicknames,
+  useAddGuestMutation,
+  useUpdateGuestMutation,
+  useDeleteGuestMutation,
+  useSendWhatsAppMutation,
+} from "~/composables/queries/useGuestListQuery";
 
-const supabase = useSupabase();
 const origin = ref("");
-
-const guests = ref<Guest[]>([]);
 const searchQuery = ref("");
+
+const { data: guests, isLoading, isFetching, refetch } = useGuestListQuery();
+const { data: nicknames } = useWeddingNicknames();
+
 const filteredGuests = computed(() => {
-  if (!searchQuery.value.trim()) return guests.value;
+  if (!searchQuery.value.trim()) return guests.value || [];
   const q = searchQuery.value.toLowerCase().trim();
-  return guests.value.filter((g) => g.name.toLowerCase().includes(q));
+  return (guests.value || []).filter((g: Guest) =>
+    g.name.toLowerCase().includes(q),
+  );
 });
-const isLoading = ref(true);
-const brideNickname = ref("");
-const groomNickname = ref("");
+
+const brideNickname = computed(() => nicknames.value?.bride_nickname || "");
+const groomNickname = computed(() => nicknames.value?.groom_nickname || "");
 
 const showForm = ref(false);
 const isSaving = ref(false);
@@ -30,34 +44,10 @@ const formSlug = ref("");
 const formGuestType = ref<GuestType>("male");
 const formPhone = ref("");
 
-const fetchGuests = async () => {
-  isLoading.value = true;
-  const { data, error } = await supabase
-    .from("guest_list")
-    .select("*")
-    .order("created_at", { ascending: false });
-  if (data) {
-    guests.value = data as Guest[];
-  }
-  isLoading.value = false;
-};
-
-const fetchWeddingInfo = async () => {
-  const { data } = await supabase
-    .from("wedding_info")
-    .select("bride_nickname, groom_nickname")
-    .maybeSingle();
-  if (data) {
-    brideNickname.value = data.bride_nickname;
-    groomNickname.value = data.groom_nickname;
-  }
-};
-
-onMounted(() => {
-  origin.value = window.location.origin;
-  fetchGuests();
-  fetchWeddingInfo();
-});
+const addMutation = useAddGuestMutation();
+const updateMutation = useUpdateGuestMutation();
+const deleteMutation = useDeleteGuestMutation();
+const sendWAMutation = useSendWhatsAppMutation();
 
 const autoSlug = (name: string) => {
   return name
@@ -108,30 +98,31 @@ const saveGuest = async () => {
   };
 
   if (editingId.value) {
-    const { error } = await supabase
-      .from("guest_list")
-      .update(payload)
-      .eq("id", editingId.value);
-
-    if (error) {
-      alert("Gagal menyimpan: " + error.message);
-      isSaving.value = false;
-      return;
-    }
+    updateMutation.mutate(
+      { id: editingId.value, ...payload },
+      {
+        onError: (err: any) => {
+          alert("Gagal menyimpan: " + err.message);
+        },
+        onSettled: () => {
+          isSaving.value = false;
+          showForm.value = false;
+          editingId.value = null;
+        },
+      },
+    );
   } else {
-    const { error } = await supabase.from("guest_list").insert(payload);
-
-    if (error) {
-      alert("Gagal menambah: " + error.message);
-      isSaving.value = false;
-      return;
-    }
+    addMutation.mutate(payload, {
+      onError: (err: any) => {
+        alert("Gagal menambah: " + err.message);
+      },
+      onSettled: () => {
+        isSaving.value = false;
+        showForm.value = false;
+        editingId.value = null;
+      },
+    });
   }
-
-  isSaving.value = false;
-  showForm.value = false;
-  editingId.value = null;
-  await fetchGuests();
 };
 
 const deleteGuest = async (guest: Guest) => {
@@ -143,17 +134,11 @@ const deleteGuest = async (guest: Guest) => {
     return;
   }
 
-  const { error } = await supabase
-    .from("guest_list")
-    .delete()
-    .eq("id", guest.id);
-
-  if (error) {
-    alert("Gagal menghapus: " + error.message);
-    return;
-  }
-
-  await fetchGuests();
+  deleteMutation.mutate(guest.id, {
+    onError: (err: any) => {
+      alert("Gagal menghapus: " + err.message);
+    },
+  });
 };
 
 const copyLink = (slug: string) => {
@@ -190,18 +175,11 @@ const sendWhatsApp = async (guest: Guest) => {
   sendingId.value = guest.id;
   window.open(whatsappUrl, "_blank");
 
-  const { error } = await supabase
-    .from("guest_list")
-    .update({
-      invitation_sent: true,
-      sent_at: new Date(),
-    })
-    .eq("id", guest.id);
-
-  if (!error) {
-    await fetchGuests();
-  }
-  sendingId.value = null;
+  sendWAMutation.mutate(guest.id, {
+    onSettled: () => {
+      sendingId.value = null;
+    },
+  });
 };
 
 const guestTypeBadge: Record<GuestType, string> = {
@@ -225,7 +203,7 @@ const guestTypeBadge: Record<GuestType, string> = {
         <div
           class="from-primary-light absolute -left-4 bottom-0 top-0 w-1 rounded-r-md bg-gradient-to-b to-transparent md:-left-8"
         ></div>
-        <div class="flex items-center justify-between">
+        <div class="flex items-start justify-between md:items-center">
           <div>
             <h3
               class="font-heading text-primary-dark text-xl font-semibold md:text-2xl"
@@ -238,7 +216,7 @@ const guestTypeBadge: Record<GuestType, string> = {
           </div>
           <button @click="openAdd" class="btn-primary flex items-center gap-2">
             <Plus class="h-4 w-4" />
-            Tambah Tamu
+            <span>Tambah</span>
           </button>
         </div>
       </div>
@@ -349,28 +327,42 @@ const guestTypeBadge: Record<GuestType, string> = {
       <div class="divider"></div>
 
       <!-- Table -->
-      <div>
+      <div class="relative">
         <div
           class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
         >
           <h3 class="font-heading text-primary-dark text-lg font-semibold">
-            Total Tamu ({{ guests.length }})
+            Total Tamu ({{ (guests || []).length }})
             <span v-if="searchQuery">
               &middot; Filtered ({{ filteredGuests.length }})</span
             >
           </h3>
-          <div class="w-full sm:w-1/4">
-            <input
-              v-model="searchQuery"
-              type="text"
-              class="input-field w-full bg-white"
-              placeholder="Cari nama tamu..."
-            />
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              @click="() => refetch()"
+              :disabled="isFetching"
+              class="flex max-w-full items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-600 transition-colors hover:border-sky-500 hover:bg-blue-500 hover:text-white"
+            >
+              <RefreshCcw
+                class="h-4 w-4"
+                :class="{ 'animate-spin': isFetching }"
+              />
+              <span class="hidden md:block">Refresh</span>
+            </button>
+            <div class="w-full">
+              <input
+                v-model="searchQuery"
+                type="text"
+                class="input-field w-full bg-white"
+                placeholder="Cari nama tamu..."
+              />
+            </div>
           </div>
         </div>
 
         <div
-          v-if="guests.length === 0"
+          v-if="!guests || guests.length === 0"
           class="text-primary flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-sky-200 bg-sky-50/30 py-12 text-center"
         >
           <UserPlus class="mb-4 h-12 w-12 text-sky-300" />
@@ -485,10 +477,10 @@ const guestTypeBadge: Record<GuestType, string> = {
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
                   <span
-                    :class="guestTypeBadge[guest.guest_type]"
+                    :class="guestTypeBadge[guest.guest_type as GuestType]"
                     class="inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold"
                   >
-                    {{ guestTypeLabel[guest.guest_type] }}
+                    {{ guestTypeLabel[guest.guest_type as GuestType] }}
                   </span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
@@ -553,6 +545,19 @@ const guestTypeBadge: Record<GuestType, string> = {
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Loading overlay -->
+        <div
+          v-if="isFetching && !isLoading"
+          class="absolute inset-0 flex items-center justify-center rounded-xl bg-white/60 backdrop-blur-[1px]"
+        >
+          <div class="flex flex-col items-center gap-2">
+            <div
+              class="border-primary h-6 w-6 animate-spin rounded-full border-[3px] border-t-transparent"
+            ></div>
+            <span class="text-primary text-xs font-medium">Memperbarui...</span>
+          </div>
         </div>
       </div>
     </div>

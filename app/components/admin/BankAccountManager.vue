@@ -1,14 +1,28 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { useSupabase } from "~/composables/useSupabase";
-import type { Bank, BankAccount } from "~/types";
+import { ref } from "vue";
+import type { BankAccount } from "~/types";
+import {
+  useBankAccountsQuery,
+  useBankOptionsQuery,
+  useAddBankAccountMutation,
+  useUpdateBankAccountMutation,
+  useDeleteBankAccountMutation,
+} from "~/composables/queries/useBankAccountsQuery";
+import { RefreshCcw } from "lucide-vue-next";
 
-const supabase = useSupabase();
-const accounts = ref<BankAccount[]>([]);
-const isLoading = ref(true);
+const {
+  data: accounts,
+  isLoading,
+  isFetching,
+  refetch,
+} = useBankAccountsQuery();
+const { data: bankOptions } = useBankOptionsQuery();
+
+const addMutation = useAddBankAccountMutation();
+const updateMutation = useUpdateBankAccountMutation();
+const deleteMutation = useDeleteBankAccountMutation();
+
 const isAdding = ref(false);
-
-const bankOptions = ref<Bank[]>([]);
 
 const newBankName = ref("");
 const newAccountNumber = ref("");
@@ -21,58 +35,39 @@ const editAccountNumber = ref("");
 const editAccountHolder = ref("");
 const isSaving = ref(false);
 
-const fetchAccounts = async () => {
-  isLoading.value = true;
-  const { data, error } = await supabase
-    .from("bank_accounts")
-    .select("*")
-    .order("sort_order", { ascending: true });
-  if (data) accounts.value = data;
-  isLoading.value = false;
-};
-
-const fetchBankOptions = async () => {
-  const { data, error } = await supabase
-    .from("bank")
-    .select("*")
-    .order("name", { ascending: true });
-  if (data) bankOptions.value = data;
-};
-
-onMounted(() => {
-  fetchAccounts();
-  fetchBankOptions();
-});
-
 const addAccount = async () => {
   if (!newBankName.value || !newAccountNumber.value || !newAccountHolder.value)
     return;
   isAdding.value = true;
 
   const sort_order =
-    accounts.value.length > 0
-      ? Math.max(...accounts.value.map((a) => a.sort_order || 0)) + 1
+    accounts.value && accounts.value.length > 0
+      ? Math.max(...accounts.value.map((a: any) => a.sort_order || 0)) + 1
       : 1;
 
-  const { error } = await supabase.from("bank_accounts").insert({
-    bank_name: newBankName.value,
-    account_number: newAccountNumber.value,
-    account_holder: newAccountHolder.value,
-    bank_logo: newBankLogo.value || null,
-    sort_order,
-  });
-
-  isAdding.value = false;
-
-  if (!error) {
-    newBankName.value = "";
-    newAccountNumber.value = "";
-    newAccountHolder.value = "";
-    newBankLogo.value = "";
-    await fetchAccounts();
-  } else {
-    alert("Gagal menambah rekening: " + error.message);
-  }
+  addMutation.mutate(
+    {
+      bank_name: newBankName.value,
+      account_number: newAccountNumber.value,
+      account_holder: newAccountHolder.value,
+      bank_logo: newBankLogo.value || null,
+      sort_order,
+    },
+    {
+      onSuccess: () => {
+        newBankName.value = "";
+        newAccountNumber.value = "";
+        newAccountHolder.value = "";
+        newBankLogo.value = "";
+      },
+      onError: (err: any) => {
+        alert("Gagal menambah rekening: " + err.message);
+      },
+      onSettled: () => {
+        isAdding.value = false;
+      },
+    },
+  );
 };
 
 const startEdit = (account: BankAccount) => {
@@ -99,33 +94,35 @@ const saveEdit = async () => {
     return;
 
   isSaving.value = true;
-  const { error } = await supabase
-    .from("bank_accounts")
-    .update({
+
+  updateMutation.mutate(
+    {
+      id: editingId.value,
       bank_name: editBankName.value,
       account_number: editAccountNumber.value,
       account_holder: editAccountHolder.value,
-    })
-    .eq("id", editingId.value);
-
-  isSaving.value = false;
-
-  if (!error) {
-    await fetchAccounts();
-    cancelEdit();
-  } else {
-    alert("Gagal mengubah rekening: " + error.message);
-  }
+    },
+    {
+      onSuccess: () => {
+        cancelEdit();
+      },
+      onError: (err: any) => {
+        alert("Gagal mengubah rekening: " + err.message);
+      },
+      onSettled: () => {
+        isSaving.value = false;
+      },
+    },
+  );
 };
 
 const deleteAccount = async (id: string) => {
   if (confirm("Yakin ingin menghapus rekening ini?")) {
-    const { error } = await supabase
-      .from("bank_accounts")
-      .delete()
-      .eq("id", id);
-    if (!error) await fetchAccounts();
-    else alert("Gagal menghapus: " + error.message);
+    deleteMutation.mutate(id, {
+      onError: (err: any) => {
+        alert("Gagal menghapus: " + err.message);
+      },
+    });
   }
 };
 </script>
@@ -144,14 +141,16 @@ const deleteAccount = async (id: string) => {
         <div
           class="from-primary-light absolute -left-4 bottom-0 top-0 w-1 rounded-r-md bg-gradient-to-b to-transparent md:-left-8"
         ></div>
-        <h3
-          class="font-heading text-primary-dark mb-2 text-xl font-semibold md:text-2xl"
-        >
-          Rekening & Hadiah
-        </h3>
-        <p class="text-primary text-sm">
-          Kelola opsi rekening untuk fitur amplop digital.
-        </p>
+        <div>
+          <h3
+            class="font-heading text-primary-dark mb-2 text-xl font-semibold md:text-2xl"
+          >
+            Rekening & Hadiah
+          </h3>
+          <p class="text-primary text-sm">
+            Kelola opsi rekening untuk fitur amplop digital.
+          </p>
+        </div>
       </div>
 
       <!-- Tambah Baru -->
@@ -170,7 +169,7 @@ const deleteAccount = async (id: string) => {
             <select required v-model="newBankName" class="input-field bg-white">
               <option value="" disabled>Pilih Bank</option>
               <option
-                v-for="bank in bankOptions"
+                v-for="bank in bankOptions || []"
                 :key="bank.id"
                 :value="bank.name"
               >
@@ -206,7 +205,7 @@ const deleteAccount = async (id: string) => {
             <button
               type="submit"
               :disabled="isAdding"
-              class="btn-primary flex w-full justify-center py-3"
+              class="btn-primary flex items-center gap-2"
             >
               <span v-if="!isAdding" class="flex items-center gap-2">
                 <svg
@@ -238,15 +237,27 @@ const deleteAccount = async (id: string) => {
       <div class="divider"></div>
 
       <!-- Daftar Rekening -->
-      <div>
+      <div class="relative">
         <div class="mb-6 flex items-center justify-between">
           <h3 class="font-heading text-primary-dark text-lg font-semibold">
-            Daftar Rekening ({{ accounts.length }})
+            Daftar Rekening ({{ (accounts || []).length }})
           </h3>
+          <button
+            type="button"
+            @click="() => refetch()"
+            :disabled="isFetching"
+            class="flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-600 transition-colors hover:border-sky-500 hover:bg-blue-500 hover:text-white"
+          >
+            <RefreshCcw
+              class="h-4 w-4"
+              :class="{ 'animate-spin': isFetching }"
+            />
+            <span class="hidden md:block">Refresh</span>
+          </button>
         </div>
 
         <div
-          v-if="accounts.length === 0"
+          v-if="!accounts || accounts.length === 0"
           class="text-primary flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-sky-200 bg-sky-50/30 py-12 text-center"
         >
           <svg
@@ -315,7 +326,7 @@ const deleteAccount = async (id: string) => {
                         class="input-field bg-white py-2 text-sm"
                       >
                         <option
-                          v-for="bank in bankOptions"
+                          v-for="bank in bankOptions || []"
                           :key="bank.id"
                           :value="bank.name"
                         >
@@ -397,6 +408,19 @@ const deleteAccount = async (id: string) => {
                 </tr>
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- Loading overlay -->
+        <div
+          v-if="isFetching && !isLoading"
+          class="absolute inset-0 flex items-center justify-center rounded-xl bg-white/60 backdrop-blur-[1px]"
+        >
+          <div class="flex flex-col items-center gap-2">
+            <div
+              class="border-primary h-6 w-6 animate-spin rounded-full border-[3px] border-t-transparent"
+            ></div>
+            <span class="text-primary text-xs font-medium">Memperbarui...</span>
           </div>
         </div>
       </div>

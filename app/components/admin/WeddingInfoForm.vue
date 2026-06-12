@@ -1,14 +1,25 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { X } from "lucide-vue-next";
+import { ref, watch } from "vue";
+import { RefreshCcw, X } from "lucide-vue-next";
+import {
+  useWeddingInfoQuery,
+  useWeddingInfoMutation,
+} from "~/composables/queries/useWeddingInfoQuery";
 
-const supabase = useSupabase();
-const isLoading = ref(true);
 const isSaving = ref(false);
 const saveSuccess = ref(false);
+const isDataReady = ref(false);
 
 const isPreviewOpen = ref(false);
 const selectedImageUrl = ref("");
+
+const {
+  data: weddingData,
+  isLoading,
+  isFetching,
+  refetch,
+} = useWeddingInfoQuery();
+const updateMutation = useWeddingInfoMutation();
 
 const openPreview = (url: string) => {
   if (!url) return;
@@ -45,12 +56,7 @@ const formData = ref({
   resepsi_maps_url: "",
 });
 
-onMounted(async () => {
-  const { data, error } = await supabase
-    .from("wedding_info")
-    .select("*")
-    .eq("id", 1)
-    .single();
+watch(weddingData, (data) => {
   if (data) {
     formData.value = { ...data };
     if (formData.value.wedding_date) {
@@ -62,11 +68,8 @@ onMounted(async () => {
       const minutes = String(d.getMinutes()).padStart(2, "0");
       formData.value.wedding_date = `${year}-${month}-${day}T${hours}:${minutes}`;
     }
+    isDataReady.value = true;
   }
-  if (error) {
-    console.error("Error fetching wedding info:", error);
-  }
-  isLoading.value = false;
 });
 
 const saveInfo = async () => {
@@ -74,24 +77,21 @@ const saveInfo = async () => {
   saveSuccess.value = false;
 
   const payload = { ...formData.value };
-  if (payload.wedding_date) {
-    payload.wedding_date = payload.wedding_date;
-  }
 
-  const { error } = await supabase
-    .from("wedding_info")
-    .update(payload)
-    .eq("id", 1);
-
-  isSaving.value = false;
-  if (!error) {
-    saveSuccess.value = true;
-    setTimeout(() => {
-      saveSuccess.value = false;
-    }, 3000);
-  } else {
-    alert("Gagal menyimpan data: " + error.message);
-  }
+  updateMutation.mutate(payload, {
+    onSuccess: () => {
+      saveSuccess.value = true;
+      setTimeout(() => {
+        saveSuccess.value = false;
+      }, 3000);
+    },
+    onError: (err: any) => {
+      alert("Gagal menyimpan data: " + err.message);
+    },
+    onSettled: () => {
+      isSaving.value = false;
+    },
+  });
 };
 </script>
 
@@ -103,18 +103,32 @@ const saveInfo = async () => {
       ></div>
     </div>
 
-    <form v-else @submit.prevent="saveInfo">
+    <form v-else @submit.prevent="saveInfo" class="relative">
       <div class="space-y-10">
         <!-- General Info -->
         <div class="relative">
           <div
             class="from-primary-light absolute -left-4 bottom-0 top-0 w-1 rounded-r-md bg-gradient-to-b to-transparent md:-left-8"
           ></div>
-          <h3
-            class="font-heading text-primary-dark mb-4 text-xl font-semibold md:text-2xl"
-          >
-            Informasi Utama
-          </h3>
+          <div class="flex items-center justify-between">
+            <h3
+              class="font-heading text-primary-dark mb-4 text-xl font-semibold md:text-2xl"
+            >
+              Informasi Utama
+            </h3>
+            <button
+              type="button"
+              @click="() => refetch()"
+              :disabled="isFetching"
+              class="flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-600 transition-colors hover:border-sky-500 hover:bg-blue-500 hover:text-white"
+            >
+              <span class="hidden md:block">Refresh</span>
+              <RefreshCcw
+                class="h-4 w-4"
+                :class="{ 'animate-spin': isFetching }"
+              />
+            </button>
+          </div>
           <div class="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6">
             <div class="sm:col-span-3">
               <label class="mb-2 block text-sm font-medium text-gray-700"
@@ -449,12 +463,11 @@ const saveInfo = async () => {
         >
           ✓ Berhasil disimpan!
         </span>
-        <span v-else></span>
 
         <button
           type="submit"
           :disabled="isSaving"
-          class="btn-primary flex items-center gap-2"
+          class="btn-primary flex w-full items-center justify-center gap-2 text-center md:ml-auto md:w-auto"
         >
           <span v-if="!isSaving">Simpan Pengaturan</span>
           <span v-else class="flex items-center gap-2">
@@ -464,6 +477,19 @@ const saveInfo = async () => {
             Menyimpan...
           </span>
         </button>
+      </div>
+
+      <!-- Loading overlay -->
+      <div
+        v-if="isFetching && !isLoading"
+        class="absolute inset-0 flex items-center justify-center rounded-xl bg-white/60 backdrop-blur-[1px]"
+      >
+        <div class="flex flex-col items-center gap-2">
+          <div
+            class="border-primary h-6 w-6 animate-spin rounded-full border-[3px] border-t-transparent"
+          ></div>
+          <span class="text-primary text-xs font-medium">Memperbarui...</span>
+        </div>
       </div>
     </form>
 
