@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import {
   Plus,
   X,
@@ -21,6 +21,10 @@ import {
 
 const origin = ref("");
 const searchQuery = ref("");
+
+onMounted(() => {
+  origin.value = window.location.origin;
+});
 
 const { data: guests, isLoading, isFetching, refetch } = useGuestListQuery();
 const { data: nicknames } = useWeddingNicknames();
